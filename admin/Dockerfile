@@ -6,4 +6,4 @@ RUN npm install
 COPY . .
 # Shared prisma volume will be mounted at /app/prisma in compose
 EXPOSE 3000
-CMD ["sh", "-c", "npx prisma generate --schema /app/prisma/schema.prisma && npx prisma migrate deploy --schema /app/prisma/schema.prisma && npm run dev"]
+CMD ["sh", "-c", "npx prisma generate --schema /app/prisma/schema.prisma && until npx prisma migrate deploy --schema /app/prisma/schema.prisma; do echo 'Waiting for database...'; sleep 5; done && npm run dev"]
