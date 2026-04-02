@@ -15,7 +15,8 @@ services:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-secret}" ]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 60s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
