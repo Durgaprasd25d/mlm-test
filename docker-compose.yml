@@ -9,8 +9,11 @@ services:
       MYSQL_USER: ${DB_USER:-bmpl}
       MYSQL_PASSWORD: ${DB_USER_PASSWORD:-bmpl}
     ports:
-      - "33062:3306"
+      - "80:80"
+      - "443:443"
     volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - bmpl-db-data:/var/lib/mysql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-secret}" ]
