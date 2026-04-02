@@ -1,0 +1,142 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-secret}
+      MYSQL_DATABASE: ${DB_NAME:-adminmlm}
+      MYSQL_USER: ${DB_USER:-bmpl}
+      MYSQL_PASSWORD: ${DB_USER_PASSWORD:-bmpl}
+    ports:
+      - "33062:3306"
+    volumes:
+      - bmpl-db-data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-secret}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${DB_PASSWORD:-secret}
+
+  nginx:
+    build:
+      context: ./nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"   # User Portal
+      - "81:81"   # Admin Portal
+    depends_on:
+      admin-frontend:
+        condition: service_started
+      user-frontend:
+        condition: service_started
+
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=mysql://root:${DB_PASSWORD:-secret}@db:3306/${DB_NAME:-adminmlm}
+      - PORT=3000
+    env_file:
+      - .env
+    volumes:
+      - ./admin:/app
+      - /app/node_modules
+      - ./prisma:/app/prisma
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  user:
+    build:
+      context: ./user
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    environment:
+      - DATABASE_URL=mysql://root:${DB_PASSWORD:-secret}@db:3306/${DB_NAME:-adminmlm}
+      - PORT=3001
+    env_file:
+      - .env
+    volumes:
+      - ./user:/app
+      - /app/node_modules
+      - ./prisma:/app/prisma
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+
+  admin-frontend:
+    build:
+      context: ./admin-frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      admin:
+        condition: service_healthy
+    ports:
+      - "5174:5174"
+    env_file:
+      - .env
+    volumes:
+      - ./admin-frontend:/app
+      - /app/node_modules
+
+  user-frontend:
+    build:
+      context: ./user-frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      user:
+        condition: service_healthy
+    ports:
+      - "5173:5173"
+    env_file:
+      - .env
+    volumes:
+      - ./user-frontend:/app
+      - /app/node_modules
+
+  setup:
+    build:
+      context: ./setup
+      dockerfile: Dockerfile
+    depends_on:
+      - admin
+      - user
+    environment:
+      - SETUP_URL=http://user:3001/v1/setup
+    restart: on-failure
+
+volumes:
+  bmpl-db-data:
