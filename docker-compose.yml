@@ -13,7 +13,7 @@ services:
     volumes:
       - bmpl-db-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${DB_PASSWORD:-secret} || exit 1"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p$${DB_PASSWORD:-secret} || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 40
