@@ -14,10 +14,10 @@ services:
       - bmpl-db-data:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$${DB_PASSWORD:-secret} || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 20
-      start_period: 60s
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 180s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:latest
