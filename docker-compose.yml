@@ -9,11 +9,8 @@ services:
       MYSQL_USER: ${DB_USER:-bmpl}
       MYSQL_PASSWORD: ${DB_USER_PASSWORD:-bmpl}
     ports:
-      - "80:80"
-      - "443:443"
+      - "33062:3306"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - /etc/letsencrypt:/etc/letsencrypt:ro
       - bmpl-db-data:/var/lib/mysql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PASSWORD:-secret}" ]
@@ -41,6 +38,10 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       admin-frontend:
         condition: service_started
@@ -79,7 +80,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     depends_on:
-      db:
+      admin:
         condition: service_healthy
     ports:
       - "3001:3001"
