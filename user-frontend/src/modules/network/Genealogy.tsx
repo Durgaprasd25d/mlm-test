@@ -41,6 +41,7 @@ interface TreeNodeProps {
 const buildTree = (users: ApiUser[], rootUserId: number, rootMemberId: string, rootName: string): TreeNodeType => {
   const nodes: Record<number, TreeNodeType> = {};
 
+  // Initialize the root node
   nodes[rootUserId] = {
     id: rootMemberId,
     name: rootName,
@@ -50,6 +51,7 @@ const buildTree = (users: ApiUser[], rootUserId: number, rootMemberId: string, r
     loaded: true,
   };
 
+  // Create all other nodes from the API data
   users.forEach(user => {
     nodes[user.id] = {
       id: user.memberId,
@@ -61,42 +63,21 @@ const buildTree = (users: ApiUser[], rootUserId: number, rootMemberId: string, r
     };
   });
 
-  const attachNode = (parent: TreeNodeType, child: TreeNodeType, side: "LEFT" | "RIGHT") => {
-    const current = side === "LEFT" ? parent.left : parent.right;
-    if (!current) {
-      if (side === "LEFT") parent.left = child;
-      else parent.right = child;
-      return;
-    }
-
-    const oppositeSide = side === "LEFT" ? "RIGHT" : "LEFT";
-    const opposite = oppositeSide === "LEFT" ? parent.left : parent.right;
-
-    if (!opposite) {
-      if (oppositeSide === "LEFT") parent.left = child;
-      else parent.right = child;
-      return;
-    }
-
-    attachNode(current, child, side);
-  };
-
+  // Attach nodes based on parentId and legPosition
   users.forEach(user => {
-    const parentIdCandidates = [user.parentId, user.sponsorId];
-    const parentId = parentIdCandidates.find(id => id != null && nodes[id]);
+    const parentId = user.parentId || user.sponsorId;
     const parentNode = parentId ? nodes[parentId] : undefined;
 
     if (parentNode) {
       const childNode = nodes[user.id];
       if (user.legPosition === "LEFT") {
-        attachNode(parentNode, childNode, "LEFT");
+        parentNode.left = childNode;
       } else if (user.legPosition === "RIGHT") {
-        attachNode(parentNode, childNode, "RIGHT");
+        parentNode.right = childNode;
       }
     }
   });
 
-  // Return the root node (now properly linked)
   return nodes[rootUserId];
 };
 
@@ -235,7 +216,7 @@ export default function ReferralTree() {
   const [rootUser, setRootUser] = useState<TreeNodeType | null>(null);
   const [treeLoading, setTreeLoading] = useState(false);
 
-  const userId = data?.data?.uId || data?.data?.id;
+  const userId = data?.data?.id || data?.data?.uId;
 
   useEffect(() => {
     setRootUser(null);
@@ -253,16 +234,10 @@ export default function ReferralTree() {
       console.log("API DATA:", res.data);
       const users: ApiUser[] = res.data || [];
 
-      const profileUid = data.data.uId;
-      const profileId = data.data.id;
-
-      const apiRootUser = users.find(u => u.uId === profileUid || u.id === profileId);
-
-      const rootUserId = apiRootUser?.id ?? profileId ?? profileUid ?? 1;
-      const rootMemberId = apiRootUser?.memberId ?? data.data.memberId;
-      const rootName = apiRootUser
-        ? `${apiRootUser.firstName} ${apiRootUser.lastName}`
-        : `${data.data.firstName} ${data.data.lastName}`;
+      // Always use the database ID for structure
+      const rootUserId = data.data.id;
+      const rootMemberId = data.data.memberId;
+      const rootName = `${data.data.firstName} ${data.data.lastName}`;
 
       const tree = buildTree(users, rootUserId, rootMemberId, rootName);
       setRootUser(tree);

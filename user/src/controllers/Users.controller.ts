@@ -31,6 +31,8 @@ export const getAll = async (
     const users = await userService.getAllUsers();
 
     const responseUsers: getUserByIdResDTO[] = users.map((user) => ({
+      id: user.id,
+      uId: user.uId,
       firstName: user.firstName,
       lastName: user.lastName,
       mobile: user.mobile,
@@ -63,6 +65,8 @@ export const getOne = async (
     const user = await userService.getUserById(userId);
 
     const responseUser: getUserByIdResDTO = {
+      id: user.id,
+      uId: user.uId,
       firstName: user.firstName,
       lastName: user.lastName,
       mobile: user.mobile,

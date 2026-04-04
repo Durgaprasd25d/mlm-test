@@ -11,13 +11,12 @@ export interface UserResponseDto {
 
   sponsorId: number | null;
   parentId: number | null;
-  memberId: number | null;
   legPosition: "LEFT" | "RIGHT" | null;
 
-  leftChildId: number?;
-  rightChildId: number?;
-  lastLeftId: number?;
-  lastRightId: number?;
+  leftChildId?: number;
+  rightChildId?: number;
+  lastLeftId?: number;
+  lastRightId?: number;
 
   lineagePath: string;
   directCount: number;
@@ -43,6 +42,8 @@ export interface UserResponseDto {
 
 //user by id repsonse dto
 export interface getUserByIdResDTO {
+  id: number;
+  uId: number | null;
   firstName: string;
   lastName: string;
   mobile: string;
