@@ -1,5 +1,5 @@
-import { Avatar, Box, Button, Paper, Typography } from "@mui/material";
-import React, { useState } from "react";
+import { Avatar, Box, Button, Chip, Divider, Paper, Table, TableBody, TableCell, TableHead, TableRow, Typography } from "@mui/material";
+import React, { useEffect, useState } from "react";
 import type { Agent, AgentTab } from "./types";
 
 // BV Hooks
@@ -8,15 +8,11 @@ import { useSelfBV } from "../../hooks/Bv/useSelfBV";
 import { useTotalFirstPurchaseBV } from "../../hooks/Bv/useTotalFirstPurchaseBV";
 import { useTotalRepurchaseBV } from "../../hooks/Bv/useTotalRepurchaseBV";
 import { useUserTotalBV } from "../../hooks/Bv/useUserTotalBV";
+import { getUserDirectsApi, getUserUplineApi } from "../../api/adminConfig.api";
 
 interface Props {
   agent: Agent;
   onClose: () => void;
-  // onKYCView: () => void;
-  // onTeamView: () => void;
-  // onEarningsView: () => void;
-  // onHistoryView: () => void;
-  // onUpgrade: () => void;
 }
 
 const BLUE = "#26619A"; 
@@ -24,13 +20,11 @@ const BLUE = "#26619A";
 const AgentDetailsPage: React.FC<Props> = ({
   agent,
   onClose,
-  // onKYCView,
-  // onTeamView,
-  // onEarningsView,
-  // onHistoryView,
-  // onUpgrade,
 }) => {
   const [activeTab, setActiveTab] = useState<AgentTab>("overview");
+  const [uplineData, setUplineData] = useState<any>(null);
+  const [directsData, setDirectsData] = useState<any[]>([]);
+  const [loadingHierarchy, setLoadingHierarchy] = useState(false);
 
   // BV Queries
   const { data: totalBVData, isLoading: totalBVLoading } = useUserTotalBV(agent.id);
@@ -39,12 +33,24 @@ const AgentDetailsPage: React.FC<Props> = ({
   const { data: repurchaseBVData, isLoading: repurchaseLoading } = useTotalRepurchaseBV(agent.id);
   const { data: lastMonthTeamBVData, isLoading: lastMonthLoading } = useLastMonthTeamBV(agent.id);
 
+  useEffect(() => {
+    if (activeTab === "upline") {
+      setLoadingHierarchy(true);
+      getUserUplineApi(agent.id)
+        .then(data => setUplineData(data))
+        .catch(err => console.error("Error fetching upline:", err))
+        .finally(() => setLoadingHierarchy(false));
+    } else if (activeTab === "childs") {
+      setLoadingHierarchy(true);
+      getUserDirectsApi(agent.id)
+        .then(data => setDirectsData(data))
+        .catch(err => console.error("Error fetching directs:", err))
+        .finally(() => setLoadingHierarchy(false));
+    }
+  }, [activeTab, agent.id]);
+
   const handleTabClick = (tab: AgentTab) => {
     setActiveTab(tab);
-    // if (tab === "kyc") return onKYCView();
-    // if (tab === "team") return onTeamView();
-    // if (tab === "earnings") return onEarningsView();
-    // if (tab === "history") return onHistoryView();
   };
 
   // Helper to extract BV values safely
@@ -96,16 +102,16 @@ const AgentDetailsPage: React.FC<Props> = ({
           <Box>
             <Typography fontWeight={700}>{agent.name}</Typography>
             <Typography variant="body2" color="text.secondary">
-              {agent.code} • Joined {agent.joinDate}
+              {agent.code} • Joined {new Date(agent.joiningDate).toLocaleDateString()}
             </Typography>
           </Box>
         </Box>
 
         {/* TABS */}
         <Paper sx={{ p: 1, mb: 3, borderRadius: "12px", background: "#F9FAFC" }}>
-          <Box sx={{ display: "flex", width: "100%" }}>
+          <Box sx={{ display: "flex", width: "100%", gap: 1 }}>
             {(
-              ["overview"] as AgentTab[]
+              ["overview", "upline", "childs"] as AgentTab[]
             ).map((tab) => (
               <Button
                 key={tab}
@@ -118,23 +124,20 @@ const AgentDetailsPage: React.FC<Props> = ({
                   color: activeTab === tab ? "#fff" : "#000",
                   bgcolor: activeTab === tab ? BLUE : "transparent",
                   "&:hover": {
-                    bgcolor: activeTab === tab ? BLUE : "transparent",
+                    bgcolor: activeTab === tab ? BLUE : "rgba(0,0,0,0.05)",
                   },
                   py: 0.6,
                   minHeight: "38px",
                   fontSize: "14px",
                   textAlign: "center",
+                  borderRadius: "8px"
                 }}
               >
                 {tab === "overview"
                   ? "Overview"
-                  : tab === "kyc"
-                  ? "KYC & Bank"
-                  : tab === "team"
-                  ? "Team"
-                  : tab === "earnings"
-                  ? "Earnings"
-                  : "History"}
+                  : tab === "upline"
+                  ? "Upline"
+                  : "Childs"}
               </Button>
             ))}
           </Box>
@@ -143,7 +146,7 @@ const AgentDetailsPage: React.FC<Props> = ({
         {/* OVERVIEW */}
         {activeTab === "overview" && (
           <Box>
-            {/* TOP BV STATS - Smaller & Clean */}
+            {/* TOP BV STATS */}
             <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
               {[
                 {
@@ -193,7 +196,7 @@ const AgentDetailsPage: React.FC<Props> = ({
               ))}
             </Box>
 
-            {/* BV BREAKDOWN - Matching small cards */}
+            {/* BV BREAKDOWN */}
             <Paper sx={{ p: 3, mb: 3, borderRadius: "12px", background: "#F9FAFC" }}>
               <Typography fontWeight={700} mb={3} sx={{ fontSize: "18px", color: BLUE }}>
                 BV Breakdown (Left/Right)
@@ -245,172 +248,157 @@ const AgentDetailsPage: React.FC<Props> = ({
                 ))}
               </Box>
             </Paper>
-
-            {/* CONTACT INFO */}
-            {/* <Box
-              sx={{
-                p: 2,
-                mb: 2,
-                borderRadius: "12px",
-                border: `2px solid ${BLUE}`,
-                background: "#ffffff",
-              }}
-            >
-              <Typography fontWeight={600} mb={2} color={BLUE}>
-                Contact Information
-              </Typography>
-
-              {[
-                ["Phone", agent.phone || "+91 98765 43210"],
-                ["Email", agent.email || "rajesh.kumar@email.com"],
-                ["Join Date", agent.joinDate],
-                ["Last Active", agent.lastActive || "2025-10-28 14:32"],
-              ].map(([label, value]) => (
-                <Box
-                  key={label}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    mb: 1,
-                  }}
-                >
-                  <Typography fontWeight={500}>{label}</Typography>
-                  <Typography>{value}</Typography>
-                </Box>
-              ))}
-            </Box> */}
-
-            {/* PACKAGE INFO */}
-            {/* <Box
-              sx={{
-                p: 3,
-                mb: 2,
-                borderRadius: "12px",
-                border: `2px solid ${BLUE}`,
-                background: "#ffffff",
-              }}
-            >
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Typography fontWeight={600} color={BLUE}>
-                  Package Information
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={onUpgrade}
-                  sx={{
-                    borderRadius: 2,
-                    textTransform: "none",
-                    bgcolor: "#70BF45",
-                    "&:hover": { bgcolor: "#70BF45" },
-                  }}
-                >
-                  Upgrade
-                </Button>
-              </Box>
-              <Box sx={{ mt: 1, display: "flex", justifyContent: "space-between" }}>
-                <Box>
-                  <Typography fontWeight={500}>Silver Package</Typography>
-                  <Typography fontSize={13} color="text.secondary">
-                    Package Value: ₹5,000
-                  </Typography>
-                </Box>
-                <Typography fontWeight={500}>Purchased on 15/8/2024</Typography>
-              </Box>
-            </Box> */}
-
-            {/* NETWORK POSITION */}
-            {/* <Box
-              sx={{
-                p: 2,
-                mb: 2,
-                borderRadius: "12px",
-                border: `2px solid ${BLUE}`,
-              }}
-            >
-              <Typography fontWeight={600} mb={2} color={BLUE}>
-                Network Position
-              </Typography>
-
-              <Box sx={{ display: "flex", gap: 2, justifyContent: "center" }}>
-                <Box
-                  sx={{
-                    flex: 1,
-                    maxWidth: 320,
-                    p: 2,
-                    borderRadius: 2,
-                    background: "#F9FAFB",
-                    border: "1px solid #e0e0e0",
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography fontSize={12} color="text.secondary" mb={1}>
-                    Sponsor
-                  </Typography>
-                  <Box
-                    sx={{
-                      border: "1px solid #d5dae3",
-                      borderRadius: 2,
-                      py: 0.6,
-                      px: 1,
-                      fontSize: 13,
-                      textAlign: "center",
-                      maxWidth: 140,
-                      mx: "auto",
-                    }}
-                  >
-                    AGT-0023
-                  </Box>
-                </Box>
-
-                <Box
-                  sx={{
-                    flex: 1,
-                    maxWidth: 320,
-                    p: 2,
-                    borderRadius: 2,
-                    background: "#F9FAFB",
-                    border: "1px solid #e0e0e0",
-                    textAlign: "center",
-                  }}
-                >
-                  <Typography fontSize={12} color="text.secondary" mb={1}>
-                    Position
-                  </Typography>
-                  <Box
-                    sx={{
-                      border: "1px solid #d5dae3",
-                      borderRadius: 2,
-                      py: 0.6,
-                      px: 1,
-                      fontSize: 13,
-                      textAlign: "center",
-                      maxWidth: 140,
-                      mx: "auto",
-                    }}
-                  >
-                    Left Leg
-                  </Box>
-                </Box>
-              </Box>
-            </Box> */}
           </Box>
         )}
 
-        {/* {activeTab === "earnings" && (
-          <EarningPage agent={agent} onTabChange={handleTabClick} />
-        )} */}
-{/* 
-        {activeTab === "history" && (
-          <HistoryPage
-            agent={agent}
-            onBack={onClose}
-            onTabChange={handleTabClick}
-          />
-        )} */}
+        {/* UPLINE TAB */}
+        {activeTab === "upline" && (
+          <Box p={2}>
+            {loadingHierarchy ? (
+              <Typography>Loading upline data...</Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                {/* Immediate Upline Details */}
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Box sx={{ flex: 1, p: 3, border: "1px solid #E0E0E0", borderRadius: "12px" }}>
+                    <Typography variant="overline" color="text.secondary">Sponsor</Typography>
+                    {uplineData?.details?.sponsor ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="h6" fontWeight={700}>{uplineData.details.sponsor.firstName} {uplineData.details.sponsor.lastName}</Typography>
+                        <Typography color="text.secondary">ID: {uplineData.details.sponsor.memberId}</Typography>
+                      </Box>
+                    ) : (
+                      <Typography sx={{ mt: 1 }}>ROOT USER</Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ flex: 1, p: 3, border: "1px solid #E0E0E0", borderRadius: "12px" }}>
+                    <Typography variant="overline" color="text.secondary">Parent</Typography>
+                    {uplineData?.details?.parent ? (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="h6" fontWeight={700}>{uplineData.details.parent.firstName} {uplineData.details.parent.lastName}</Typography>
+                        <Typography color="text.secondary">ID: {uplineData.details.parent.memberId}</Typography>
+                      </Box>
+                    ) : (
+                      <Typography sx={{ mt: 1 }}>ROOT USER</Typography>
+                    )}
+                  </Box>
+                </Box>
+
+                {/* Referral Chain */}
+                <Box>
+                  <Typography fontWeight={700} mb={2} color={BLUE}>Referral Chain (Bottom to Top)</Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    {uplineData?.upline?.length > 0 ? (
+                      [...uplineData.upline].reverse().map((user: any, idx: number) => (
+                        <Box key={user.id} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                          <Box sx={{ 
+                            width: 32, height: 32, borderRadius: '50%', 
+                            bgcolor: BLUE, color: 'white', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 12, fontWeight: 700 
+                          }}>
+                            {idx + 1}
+                          </Box>
+                          <Box>
+                            <Typography variant="body2" fontWeight={600}>{user.firstName} {user.lastName}</Typography>
+                            <Typography variant="caption" color="text.secondary">{user.memberId}</Typography>
+                          </Box>
+                          {idx < uplineData.upline.length - 1 && <Box sx={{ ml: -1, color: '#E0E0E0' }}>→</Box>}
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography color="text.secondary">No upline chain found.</Typography>
+                    )}
+                  </Box>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
+
+        {/* CHILDS TAB */}
+        {activeTab === "childs" && (
+          <Box p={2}>
+            {loadingHierarchy ? (
+              <Typography>Loading directs data...</Typography>
+            ) : (
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {/* Immediate Binary Childs */}
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Box sx={{ flex: 1, p: 3, border: "1px solid #E0E0E0", borderRadius: "12px", textAlign: 'center' }}>
+                    <Typography variant="overline" color={BLUE} fontWeight={700}>Left Child</Typography>
+                    <Divider sx={{ my: 1.5 }} />
+                    {uplineData?.details?.leftChild ? (
+                      <Box>
+                        <Typography fontWeight={700}>{uplineData.details.leftChild.firstName} {uplineData.details.leftChild.lastName}</Typography>
+                        <Typography variant="body2" color="text.secondary">{uplineData.details.leftChild.memberId}</Typography>
+                      </Box>
+                    ) : (
+                      <Typography color="text.secondary" fontStyle="italic">Empty</Typography>
+                    )}
+                  </Box>
+                  <Box sx={{ flex: 1, p: 3, border: "1px solid #E0E0E0", borderRadius: "12px", textAlign: 'center' }}>
+                   <Typography variant="overline" color={BLUE} fontWeight={700}>Right Child</Typography>
+                   <Divider sx={{ my: 1.5 }} />
+                    {uplineData?.details?.rightChild ? (
+                      <Box>
+                        <Typography fontWeight={700}>{uplineData.details.rightChild.firstName} {uplineData.details.rightChild.lastName}</Typography>
+                        <Typography variant="body2" color="text.secondary">{uplineData.details.rightChild.memberId}</Typography>
+                      </Box>
+                    ) : (
+                      <Typography color="text.secondary" fontStyle="italic">Empty</Typography>
+                    )}
+                  </Box>
+                </Box>
+
+                {/* Direct Children Table */}
+                <Box>
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography fontWeight={700} color={BLUE}>Direct Downline List</Typography>
+                    <Chip label={`${directsData?.length || 0} Directs`} color="primary" size="small" />
+                  </Box>
+                  
+                  <Table size="small">
+                    <TableHead>
+                      <TableRow sx={{ bgcolor: '#F5F7FA' }}>
+                        <TableCell fontWeight={600}>Member ID</TableCell>
+                        <TableCell fontWeight={600}>Name</TableCell>
+                        <TableCell fontWeight={600}>Mobile</TableCell>
+                        <TableCell fontWeight={600}>Status</TableCell>
+                        <TableCell fontWeight={600}>Join Date</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {directsData?.length > 0 ? directsData.map((child: any) => (
+                        <TableRow key={child.id} hover>
+                          <TableCell>{child.memberId}</TableCell>
+                          <TableCell>{child.firstName} {child.lastName}</TableCell>
+                          <TableCell>{child.mobile || "—"}</TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={child.status} 
+                              size="small" 
+                              sx={{ 
+                                height: 20, fontSize: 10,
+                                bgcolor: child.status === 'ACTIVE' ? '#E8F5E9' : '#FFEBEE',
+                                color: child.status === 'ACTIVE' ? '#2E7D32' : '#C62828'
+                              }} 
+                            />
+                          </TableCell>
+                          <TableCell>{new Date(child.createdAt).toLocaleDateString()}</TableCell>
+                        </TableRow>
+                      )) : (
+                        <TableRow>
+                          <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>No direct children found.</TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </Box>
+              </Box>
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* FOOTER */}
@@ -423,44 +411,6 @@ const AgentDetailsPage: React.FC<Props> = ({
           gap: 2,
         }}
       >
-        {activeTab === "kyc" && agent.kyc === "Pending" && (
-          <>
-            <Button
-              variant="contained"
-              sx={{
-                background: "#70BF45",
-                color: "white",
-                px: 3,
-                textTransform: "none",
-                fontSize: "13px",
-                "&:hover": { background: "#5fa33a" },
-              }}
-              onClick={() => {
-                console.log("Approved");
-                onClose();
-              }}
-            >
-              Approve
-            </Button>
-            <Button
-              variant="contained"
-              sx={{
-                background: "#FF5252",
-                color: "white",
-                px: 3,
-                textTransform: "none",
-                fontSize: "13px",
-                "&:hover": { background: "#e53935" },
-              }}
-              onClick={() => {
-                console.log("Rejected");
-                onClose();
-              }}
-            >
-              Reject
-            </Button>
-          </>
-        )}
         <Button
           variant="contained"
           onClick={onClose}

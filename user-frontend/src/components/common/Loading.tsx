@@ -34,7 +34,7 @@ export default function Loading() {
                 fontWeight: 800, color: 'text.secondary', 
                 letterSpacing: '1px', textTransform: 'uppercase', fontSize: 10
             }}>
-                Initializing Command Center...
+                Loading...
             </Typography>
 
             <style>{`

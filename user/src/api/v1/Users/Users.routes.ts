@@ -11,6 +11,8 @@ import {
   getUpline,
   update,
   getMyDirectsController,
+  getUserUplineProfileController,
+  getUserDirectsProfileController,
 } from "../../../controllers/Users.controller";
 
 import {
@@ -42,6 +44,8 @@ userRouter.use(verifyUser);
 userRouter.post("/logout", logoutController);
 
 userRouter.get("/profile", getOne);
+userRouter.get("/profile/upline", getUserUplineProfileController);
+userRouter.get("/profile/directs", getUserDirectsProfileController);
 userRouter.get("/downline", getDownline);
 userRouter.get("/upline", getUpline);
 userRouter.get("/my-directs", getMyDirectsController);

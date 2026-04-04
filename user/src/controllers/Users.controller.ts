@@ -248,3 +248,37 @@ export const getTeamCount = async (
     next(e);
   }
 };
+
+export const getUserUplineProfileController = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = res.locals.user?.id;
+    if (!userId) {
+      throw AppError.unauthorized("User not authenticated");
+    }
+    const result = await userService.getUserUplineUsecase(userId);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getUserDirectsProfileController = async (
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const userId = res.locals.user?.id;
+    if (!userId) {
+      throw AppError.unauthorized("User not authenticated");
+    }
+    const result = await userService.getUserDirectsUsecase(userId);
+    res.status(200).json({ success: true, data: result });
+  } catch (error) {
+    next(error);
+  }
+};

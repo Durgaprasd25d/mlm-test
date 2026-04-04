@@ -153,3 +153,55 @@ export const initializeUserSetup = async (payload: SetupPayload) => {
     rootUser,
   };
 };
+
+export const resetAndInitializeDatabase = async (payload: SetupPayload) => {
+  const tables = [
+    "admin_login_history",
+    "user_activity_logs",
+    "kyc",
+    "plan_purchases",
+    "bv_ledger",
+    "user_tree_closure",
+    "royal_qualifier",
+    "system_income",
+    "wallet_transaction",
+    "wallet",
+    "royal_club_income",
+    "users_payout_history",
+    "payout",
+    "income_history",
+    "generate_income",
+    "reward_history",
+    "reward_config",
+    "order_status_logs",
+    "order_details",
+    "order_address",
+    "order_place",
+    "carts",
+    "reviews",
+    "product",
+    "brand",
+    "subcategories",
+    "categories",
+    "sku_config",
+    "_ConfigRoyalPlans",
+    "plans_master",
+    "users",
+    "aa_0_admin_db",
+    "config_table",
+  ];
+
+  await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 0;`);
+  
+  for (const table of tables) {
+    try {
+      await prisma.$executeRawUnsafe(`TRUNCATE TABLE \`${table}\`;`);
+    } catch (error) {
+      console.error(`Failed to truncate table ${table}:`, error);
+    }
+  }
+  
+  await prisma.$executeRawUnsafe(`SET FOREIGN_KEY_CHECKS = 1;`);
+
+  return await initializeUserSetup(payload);
+};

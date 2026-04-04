@@ -69,3 +69,55 @@ export const updateUserProfile = async (payload: any) => {
 
   return data;
 };
+
+export const getUserUplineApi = async () => {
+  let res = await fetch(`${BASE_URL}/v1/users/profile/upline`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (res.status === 401) {
+    try {
+      await regenAccessTokenApi();
+      res = await fetch(`${BASE_URL}/v1/users/profile/upline`, {
+        method: "GET",
+        credentials: "include",
+      });
+    } catch (err) {
+      window.location.href = "/login";
+      throw new Error("Session expired");
+    }
+  }
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.message || "Failed to fetch upline");
+  }
+  return data;
+};
+
+export const getUserDirectsApi = async () => {
+  let res = await fetch(`${BASE_URL}/v1/users/profile/directs`, {
+    method: "GET",
+    credentials: "include",
+  });
+
+  if (res.status === 401) {
+    try {
+      await regenAccessTokenApi();
+      res = await fetch(`${BASE_URL}/v1/users/profile/directs`, {
+        method: "GET",
+        credentials: "include",
+      });
+    } catch (err) {
+      window.location.href = "/login";
+      throw new Error("Session expired");
+    }
+  }
+
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(data?.message || "Failed to fetch directs");
+  }
+  return data;
+};

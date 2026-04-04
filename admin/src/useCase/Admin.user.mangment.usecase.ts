@@ -1,5 +1,8 @@
 import { UpdateUserDto } from "@/dto";
 import {
+  getUserDirectsRepo,
+  getUserHierarchyRepo,
+  getUsersByIdsRepo,
   getUsersRepo,
   updateUserRepo,
   userStatusRepo,
@@ -50,4 +53,31 @@ export const updateUserUsecase = async (id: number, body: UpdateUserDto) => {
   if (body.legPosition) updateData.legPosition = body.legPosition;
 
   return updateUserRepo(id, updateData);
+};
+
+export const getUserUplineUsecase = async (userId: number) => {
+  const user = await getUserHierarchyRepo(userId);
+  if (!user || !user.lineagePath) return { upline: [], details: user };
+
+  const uplineIds = user.lineagePath
+    .split("/")
+    .filter((id) => id && id !== userId.toString())
+    .map(Number);
+
+  const uplineUsers = await getUsersByIdsRepo(uplineIds);
+
+  // Sort by lineage path order (root to parent)
+  const sortedUpline = uplineIds
+    .map((id) => uplineUsers.find((u) => u.id === id))
+    .filter(Boolean);
+
+  return {
+    upline: sortedUpline,
+    details: user,
+  };
+};
+
+export const getUserDirectsUsecase = async (userId: number) => {
+  const directs = await getUserDirectsRepo(userId);
+  return directs;
 };

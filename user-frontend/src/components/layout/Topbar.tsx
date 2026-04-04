@@ -51,6 +51,7 @@ const Topbar = ({
   const user = data?.data;
 
   const fullName = `${user?.firstName ?? ""} ${user?.lastName ?? ""}`;
+  const initials = `${user?.firstName?.[0] ?? ""}${user?.lastName?.[0] ?? ""}`.toUpperCase();
 
   /* -------------------- HANDLERS -------------------- */
 
@@ -221,7 +222,16 @@ const Topbar = ({
             onClick={(e) => setUserMenu(e.currentTarget)}
           >
 
-            <Avatar src="https://i.pravatar.cc/50" />
+            <Avatar
+              sx={{
+                bgcolor: designConfig.colors.primary.main,
+                color: designConfig.colors.primary.contrastText,
+                fontWeight: 600,
+                fontSize: "0.875rem",
+              }}
+            >
+              {isLoading ? "" : initials}
+            </Avatar>
 
             <Box ml={1} display={{ xs: "none", sm: "block" }}>
 

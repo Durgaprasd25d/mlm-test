@@ -48,13 +48,6 @@ type MenuConfig = MenuItem | MenuDropdown;
 // Updated menu config with isNew flags
 const menuConfig: MenuConfig[] = [
   {
-    type: "dropdown",
-    name: "Master",
-    icon: <AdminPanelSettingsIcon />,
-    basePath: "/admins",
-    children: [{ name: "Admin Management", path: "/admins" }],
-  },
-  {
     type: "item",
     name: "Dashboard",
     path: "/dashboard",
@@ -62,12 +55,24 @@ const menuConfig: MenuConfig[] = [
   },
   {
     type: "dropdown",
+    name: "Master",
+    icon: <AdminPanelSettingsIcon />,
+    basePath: "/admins",
+    children: [{ name: "Admin Management", path: "/admins" }],
+  },
+
+  {
+    type: "dropdown",
     name: "Packages & Plans",
     icon: <LocalActivityIcon />,
     basePath: "/packages-plans",
     children: [
       { name: "All Plans", path: "/packages-plans" },
-      { name: "Plan Approvals", path: "/packages-plans/approvals", isNew: true },
+      {
+        name: "Plan Approvals",
+        path: "/packages-plans/approvals",
+        isNew: true,
+      },
     ],
   },
   {
@@ -105,20 +110,20 @@ const menuConfig: MenuConfig[] = [
     type: "item",
     name: "Income",
     path: "/income",
-    icon: <CurrencyRupeeOutlined />
+    icon: <CurrencyRupeeOutlined />,
   },
   {
     type: "item",
     name: "Payout",
     path: "/payout",
-    icon: <PaymentOutlined />
+    icon: <PaymentOutlined />,
   },
   {
     type: "item",
     name: "Rewards",
     path: "/rewards",
     isNew: true,
-    icon: <Trophy />
+    icon: <Trophy />,
   },
   {
     type: "dropdown",
@@ -131,7 +136,6 @@ const menuConfig: MenuConfig[] = [
       { name: "Brand Management", path: "/e-commerce/brands" },
       { name: "Product Management", path: "/e-commerce/products" },
       { name: "Orders", path: "/e-commerce/orders", isNew: true },
-
     ],
   },
   {
@@ -156,17 +160,19 @@ const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const toggleMenu = (name: string) => {
-    setOpenMenus((prev) => ({ ...prev, [name]: !prev[name] }));
+    setOpenMenu((prev) => (prev === name ? null : name));
   };
-
   const renderMenuLabel = (name: string, isNew?: boolean) => {
     if (!isNew) return name;
 
     return (
-      <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box
+        component="span"
+        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+      >
         {name}
         <Chip
           label="New"
@@ -174,11 +180,11 @@ const Sidebar = () => {
           color="success"
           sx={{
             height: 18,
-            fontSize: '0.65rem',
+            fontSize: "0.65rem",
             fontWeight: 600,
-            bgcolor: '#e8f5e9',
-            color: '#2e7d32',
-            borderRadius: '10px',
+            bgcolor: "#e8f5e9",
+            color: "#2e7d32",
+            borderRadius: "10px",
           }}
         />
         {/* Alternative: sparkle icon instead of chip */}
@@ -249,14 +255,23 @@ const Sidebar = () => {
                   justifyContent: isCollapsed ? "center" : "flex-start",
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 0, mr: isCollapsed ? 0 : 2, color: isActive ? "primary.main" : "inherit" }}>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: isCollapsed ? 0 : 2,
+                    color: isActive ? "primary.main" : "inherit",
+                  }}
+                >
                   {menu.icon}
                 </ListItemIcon>
 
                 {!isCollapsed && (
                   <ListItemText
                     primary={renderMenuLabel(menu.name, menu.isNew)}
-                    primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: isActive ? 600 : 500 }}
+                    primaryTypographyProps={{
+                      fontSize: "0.95rem",
+                      fontWeight: isActive ? 600 : 500,
+                    }}
                   />
                 )}
               </ListItemButton>
@@ -268,9 +283,7 @@ const Sidebar = () => {
             <Box key={menu.name}>
               <ListItemButton
                 onClick={() =>
-                  isCollapsed
-                    ? navigate(menu.basePath)
-                    : toggleMenu(menu.name)
+                  isCollapsed ? navigate(menu.basePath) : toggleMenu(menu.name)
                 }
                 sx={{
                   borderRadius: 2,
@@ -281,7 +294,13 @@ const Sidebar = () => {
                   justifyContent: isCollapsed ? "center" : "flex-start",
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 0, mr: isCollapsed ? 0 : 2, color: isActive ? "primary.main" : "inherit" }}>
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: isCollapsed ? 0 : 2,
+                    color: isActive ? "primary.main" : "inherit",
+                  }}
+                >
                   {menu.icon}
                 </ListItemIcon>
 
@@ -289,15 +308,22 @@ const Sidebar = () => {
                   <>
                     <ListItemText
                       primary={renderMenuLabel(menu.name, menu.isNew)}
-                      primaryTypographyProps={{ fontSize: '0.95rem', fontWeight: isActive ? 600 : 500 }}
+                      primaryTypographyProps={{
+                        fontSize: "0.95rem",
+                        fontWeight: isActive ? 600 : 500,
+                      }}
                       sx={{ flexGrow: 1 }}
                     />
-                    {openMenus[menu.name] ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                    {openMenu === menu.name ? (
+                      <ExpandLessIcon />
+                    ) : (
+                      <ExpandMoreIcon />
+                    )}
                   </>
                 )}
               </ListItemButton>
 
-              <Collapse in={openMenus[menu.name] && !isCollapsed}>
+              <Collapse in={openMenu === menu.name && !isCollapsed}>
                 <List disablePadding sx={{ pl: 1 }}>
                   {menu.children.map((child) => (
                     <ListItemButton
@@ -309,15 +335,18 @@ const Sidebar = () => {
                         pl: 5,
                         py: 0.8,
                         background:
-                          location.pathname === child.path ? "#e3f2fd" : "transparent",
+                          location.pathname === child.path
+                            ? "#e3f2fd"
+                            : "transparent",
                         "&:hover": { background: "#f0f7ff" },
                       }}
                     >
                       <ListItemText
                         primary={renderMenuLabel(child.name, child.isNew)}
                         primaryTypographyProps={{
-                          fontSize: '0.9rem',
-                          fontWeight: location.pathname === child.path ? 600 : 500,
+                          fontSize: "0.9rem",
+                          fontWeight:
+                            location.pathname === child.path ? 600 : 500,
                         }}
                       />
                     </ListItemButton>
@@ -330,6 +359,6 @@ const Sidebar = () => {
       </List>
     </Drawer>
   );
-}
+};
 
 export default Sidebar;

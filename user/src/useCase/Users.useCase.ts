@@ -331,3 +331,32 @@ export const getTeamStats = async (userId: number) => {
     },
   };
 };
+
+export const getUserUplineUsecase = async (userId: number) => {
+  const user = await userRepository.getUserHierarchyRepo(userId);
+  if (!user) {
+    throw AppError.notFound("User not found");
+  }
+
+  const uplineIds = user.lineagePath
+    ? user.lineagePath.split(",").map(Number).filter(id => id !== user.id)
+    : [];
+
+  let referralChain: any[] = [];
+  if (uplineIds.length > 0) {
+    const uplineUsers = await userRepository.getUsersByIdsRepo(uplineIds);
+    // Sort based on lineagePath order (top to bottom)
+    referralChain = uplineIds
+      .map(id => uplineUsers.find(u => u.id === id))
+      .filter(Boolean);
+  }
+
+  return {
+    user,
+    referralChain,
+  };
+};
+
+export const getUserDirectsUsecase = async (userId: number) => {
+  return userRepository.getUserDirectsRepo(userId);
+};

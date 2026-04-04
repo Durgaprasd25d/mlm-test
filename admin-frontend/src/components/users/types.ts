@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type AgentTab = "overview" | "kyc" | "team" | "earnings" | "history";
+export type AgentTab = "overview" | "kyc" | "team" | "earnings" | "history" | "upline" | "childs";
 
 export interface Agent {
   id: number;

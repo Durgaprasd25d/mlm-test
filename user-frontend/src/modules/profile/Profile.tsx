@@ -11,6 +11,7 @@ import designConfig from "../../config/designConfig";
 import { AgentCard } from "./components/AgentCard";
 import { MenuSection } from "./components/MenuSection";
 import { ProfileHeader } from "./components/ProfileHeader";
+import { HierarchyDetails } from "./components/HierarchyDetails";
 
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -62,43 +63,45 @@ const Profile = () => {
 
             <Container maxWidth="lg" sx={{ mt: 2 }}>
                 <Grid container spacing={4}>
-                    {/* Agent Card */}
+                    {/* Left Column: Profile Card & Summary (Hide on small if needed or keep) */}
                     <Grid size={{ xs: 12, md: 4 }}>
                         <AgentCard />
                     </Grid>
 
-                    {/* Menu Section */}
+                    {/* Right Column: Dynamic Content based on Tabs inside HierarchyDetails */}
                     <Grid size={{ xs: 12, md: 8 }}>
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-
-                            <MenuSection items={menuItems1} />
-                            <MenuSection items={menuItems2} />
-
-                            {/* Logout Button */}
-                            <Button
-                                variant="outlined"
-                                color="error"
-                                fullWidth
-                                size="large"
-                                startIcon={<LogoutIcon />}
-                                onClick={handleLogout}
-                                disabled={isPending}
-                                sx={{
-                                    mt: 1,
-                                    fontWeight: 700,
-                                    borderRadius: "16px",
-                                    py: 1.5,
-                                    borderWidth: "2px",
-                                    "&:hover": {
-                                        borderWidth: "2px",
-                                        bgcolor: designConfig.colors.error.background,
-                                    },
-                                }}
-                            >
-                                {isPending ? "Logging out..." : "Log Out"}
-                            </Button>
-
-                        </Box>
+                        <HierarchyDetails 
+                            renderMenu={() => (
+                                <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+                                    <MenuSection items={menuItems1} />
+                                    <MenuSection items={menuItems2} />
+                                    
+                                    {/* Logout Button */}
+                                    <Button
+                                        variant="outlined"
+                                        color="error"
+                                        fullWidth
+                                        size="large"
+                                        startIcon={<LogoutIcon />}
+                                        onClick={handleLogout}
+                                        disabled={isPending}
+                                        sx={{
+                                            mt: 1,
+                                            fontWeight: 700,
+                                            borderRadius: "16px",
+                                            py: 1.5,
+                                            borderWidth: "2px",
+                                            "&:hover": {
+                                                borderWidth: "2px",
+                                                bgcolor: designConfig.colors.error.background,
+                                            },
+                                        }}
+                                    >
+                                        {isPending ? "Logging out..." : "Log Out"}
+                                    </Button>
+                                </Box>
+                            )}
+                        />
                     </Grid>
                 </Grid>
             </Container>

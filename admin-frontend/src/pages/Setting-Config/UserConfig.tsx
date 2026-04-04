@@ -23,16 +23,29 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import { useConfig } from "../../hooks/Config/useConfig";
 import type { ConfigPayload } from "../../types/config";
-import { getConfigApi } from "../../api/adminConfig.api";
+import { getConfigApi, resetDatabaseApi } from "../../api/adminConfig.api";
 import { getPlansApi } from "../../api/plan.api";
+import { useLogout } from "../../hooks/Auth/useLogout";
+import WarningIcon from "@mui/icons-material/Warning";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+} from "@mui/material";
 
 export default function UserConfig() {
     const { mutateAsync, isPending } = useConfig();
+    const { mutate: logoutMutate } = useLogout();
 
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isFetching, setIsFetching] = useState(true);
     const [allPlans, setAllPlans] = useState<any[]>([]);
+    const [resetDialogOpen, setResetDialogOpen] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
 
     const [form, setForm] = useState<ConfigPayload>({
         autoMemId: "STATIC",
@@ -328,8 +341,130 @@ export default function UserConfig() {
                             {isPending ? "Saving..." : "Save Configuration"}
                         </Button>
                     </Box>
+
+                    <Divider sx={{ my: 4 }} />
+
+                    <Card sx={{ borderColor: 'error.main', border: 1, bgcolor: 'error.lighter' }}>
+                        <CardHeader 
+                            title={
+                                <Stack direction="row" spacing={1} alignItems="center">
+                                    <WarningIcon color="error" />
+                                    <Typography variant="h6" color="error.main" fontWeight={700}>
+                                        Danger Zone
+                                    </Typography>
+                                </Stack>
+                            }
+                            subheader="Perform critical system actions. These changes are irreversible."
+                        />
+                        <CardContent>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Box>
+                                    <Typography variant="subtitle1" fontWeight={600}>
+                                        Factory Reset Database
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Wipe all users, orders, wallet data and re-initialize with default settings.
+                                    </Typography>
+                                </Box>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<RestartAltIcon />}
+                                    onClick={() => setResetDialogOpen(true)}
+                                    sx={{ fontWeight: 700 }}
+                                >
+                                    Reset Everything
+                                </Button>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+
+                    <Dialog
+                        open={resetDialogOpen}
+                        onClose={() => !isResetting && setResetDialogOpen(false)}
+                    >
+                        <DialogTitle sx={{ color: 'error.main', fontWeight: 700 }}>
+                            Irreversible Action!
+                        </DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                Are you absolutely sure you want to perform a factory reset? 
+                                This will <strong>DELETE ALL DATA</strong> in the system. 
+                                You will be logged out and the system will re-initialize with default credentials.
+                            </DialogContentText>
+                        </DialogContent>
+                        <DialogActions sx={{ p: 3 }}>
+                            <Button 
+                                onClick={() => setResetDialogOpen(false)} 
+                                disabled={isResetting}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleReset}
+                                color="error"
+                                variant="contained"
+                                disabled={isResetting}
+                                startIcon={isResetting ? <CircularProgress size={18} color="inherit" /> : <RestartAltIcon />}
+                            >
+                                {isResetting ? "Resetting..." : "Yes, Reset Everything"}
+                            </Button>
+                        </DialogActions>
+                    </Dialog>
                 </>
             )}
         </Box>
     );
+
+    async function handleReset() {
+        setIsResetting(true);
+        try {
+            await resetDatabaseApi({
+                config: {
+                    autoMemId: form.autoMemId,
+                    userRegistrationNo: form.userRegistrationNo,
+                    prefixMemId: form.prefixMemId,
+                    minLength: form.minLength,
+                    incomeCommission: form.incomeCommission,
+                    royaltyCommission: form.royaltyCommission,
+                    planConfigKey: "PLAN_APPROVAL_MODE",
+                    planConfigValue: form.plan_config_value === "0" ? "AUTO" : "MANUALADMIN",
+                    tds: form.tds,
+                    admincharges: form.admincharges
+                },
+                rootUser: {
+                    firstName: "Root",
+                    lastName: "User",
+                    mobile: "9937406469",
+                    email: "root@example.com",
+                    password: "Root@123"
+                },
+                defaultAdmin: {
+                    firstName: "Super",
+                    lastName: "Admin",
+                    mobile: "9937406469",
+                    email: "admin@example.com",
+                    username: "superadmin",
+                    password: "Admin@123",
+                    adminType: "SUPERADMIN"
+                }
+            });
+
+            // On success, force logout
+            logoutMutate({}, {
+                onSuccess: () => {
+                    window.location.href = "/login";
+                },
+                onError: () => {
+                    // Fallback redirect if logout api fails
+                    window.location.href = "/login";
+                }
+            });
+        } catch (err: any) {
+            setError(err.message || "Failed to reset database");
+            setResetDialogOpen(false);
+        } finally {
+            setIsResetting(false);
+        }
+    }
 }

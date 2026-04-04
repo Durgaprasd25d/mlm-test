@@ -128,6 +128,7 @@ const AgentListPage: React.FC<Props> = ({ onViewDetails }) => {
                 </TableSortLabel>
               </TableCell>
               <TableCell sx={{ color: "white" }}>User</TableCell>
+              <TableCell sx={{ color: "white" }}>Mobile</TableCell>
               <TableCell sx={{ color: "white" }}>KYC</TableCell>
               <TableCell sx={{ color: "white" }}>Status</TableCell>
               <TableCell sx={{ color: "white" }}>Join Date</TableCell>
@@ -140,7 +141,7 @@ const AgentListPage: React.FC<Props> = ({ onViewDetails }) => {
           <TableBody>
             {isLoading && (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={8} align="center">
                   Loading users...
                 </TableCell>
               </TableRow>
@@ -168,6 +169,8 @@ const AgentListPage: React.FC<Props> = ({ onViewDetails }) => {
                     </Box>
                   </TableCell>
 
+                  <TableCell>{user.mobile || "—"}</TableCell>
+
                   <TableCell>{user.kycStatus ?? "—"}</TableCell>
 
                   <TableCell>
@@ -188,7 +191,7 @@ const AgentListPage: React.FC<Props> = ({ onViewDetails }) => {
                     <IconButton
                       onClick={() =>
                         onViewDetails({
-                          id:user.id,
+                          id: user.id,
                           code: user.memberId,
                           name: `${user.firstName} ${user.lastName}`,
                           phone: user.mobile,
@@ -204,7 +207,7 @@ const AgentListPage: React.FC<Props> = ({ onViewDetails }) => {
 
             {!isLoading && users.length === 0 && (
               <TableRow>
-                <TableCell colSpan={7} align="center">
+                <TableCell colSpan={8} align="center">
                   No users found
                 </TableCell>
               </TableRow>

@@ -53,3 +53,63 @@ export const updateUserRepo = (id: number, data: UpdateUserDto) => {
     data,
   });
 };
+
+export const getUserHierarchyRepo = async (userId: number) => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      memberId: true,
+      firstName: true,
+      lastName: true,
+      mobile: true,
+      email: true,
+      lineagePath: true,
+      sponsorId: true,
+      parentId: true,
+      leftChildId: true,
+      rightChildId: true,
+      sponsor: {
+        select: { id: true, memberId: true, firstName: true, lastName: true },
+      },
+      parent: {
+        select: { id: true, memberId: true, firstName: true, lastName: true },
+      },
+      leftChild: {
+        select: { id: true, memberId: true, firstName: true, lastName: true },
+      },
+      rightChild: {
+        select: { id: true, memberId: true, firstName: true, lastName: true },
+      },
+    },
+  });
+};
+
+export const getUserDirectsRepo = async (userId: number) => {
+  return prisma.user.findMany({
+    where: { sponsorId: userId },
+    select: {
+      id: true,
+      memberId: true,
+      firstName: true,
+      lastName: true,
+      mobile: true,
+      status: true,
+      createdAt: true,
+    },
+  });
+};
+
+export const getUsersByIdsRepo = async (ids: number[]) => {
+  return prisma.user.findMany({
+    where: { id: { in: ids } },
+    select: {
+      id: true,
+      memberId: true,
+      firstName: true,
+      lastName: true,
+      mobile: true,
+      status: true,
+    },
+  });
+};

@@ -41,6 +41,8 @@ const Topbar = () => {
     });
   };
 
+  const initials = `${adminData?.Admin.firstName?.[0] ?? ""}${adminData?.Admin.lastName?.[0] ?? ""}`.toUpperCase();
+
   return (
     <AppBar
       position="sticky"
@@ -72,8 +74,17 @@ const Topbar = () => {
         >
           <Avatar
             alt="Profile"
-            sx={{ width: 40, height: 40 }}
-          />
+            sx={{
+              width: 40,
+              height: 40,
+              bgcolor: "#1976d2",
+              color: "#fff",
+              fontWeight: 600,
+              fontSize: "0.875rem",
+            }}
+          >
+            {isLoading ? "" : initials}
+          </Avatar>
           <Box sx={{ ml: 1 }}>
             {isLoading ? (
               <CircularProgress size={16} />

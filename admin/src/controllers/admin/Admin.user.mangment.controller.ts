@@ -1,5 +1,7 @@
 import AppError from "@/errors/AppError";
 import {
+  getUserDirectsUsecase,
+  getUserUplineUsecase,
   getUsersUsecase,
   updateUserStatusUsecase,
   updateUserUsecase,
@@ -84,5 +86,43 @@ export const updateUserController = async (
     res.status(500).json({
       msg: "Internal server error",
     });
+  }
+};
+
+export const getUserUplineController = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.id);
+    if (!userId || isNaN(userId)) {
+      throw AppError.badRequest("Valid user ID is required");
+    }
+
+    const data = await getUserUplineUsecase(userId);
+    res.status(200).json({
+      success: true,
+      message: "User upline fetched successfully",
+      data,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const getUserDirectsController = async (req: Request, res: Response) => {
+  try {
+    const userId = Number(req.params.id);
+    if (!userId || isNaN(userId)) {
+      throw AppError.badRequest("Valid user ID is required");
+    }
+
+    const data = await getUserDirectsUsecase(userId);
+    res.status(200).json({
+      success: true,
+      message: "User directs fetched successfully",
+      data,
+    });
+  } catch (error: any) {
+    console.error(error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
