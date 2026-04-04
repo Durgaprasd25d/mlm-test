@@ -34,6 +34,15 @@ export const verifyAdmin = (
   next: NextFunction,
 ): void => {
   try {
+    // 1. Check for Internal API Secret (Service-to-Service)
+    const internalSecret = req.headers["x-internal-secret"];
+    if (internalSecret && internalSecret === config.appSecret) {
+      const adminId = Number(req.headers["x-admin-id"]);
+      res.locals.admin = { id: isNaN(adminId) ? 0 : adminId };
+      return next();
+    }
+
+    // 2. Fallback to Cookie Auth
     const token = req.cookies?.accessToken as string | undefined;
 
     if (!token) {

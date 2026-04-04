@@ -17,6 +17,7 @@ import { subcategoryRouter } from "./subcategory/subcategory.routes";
 import { brandRouter } from "./Brand/brand.routes";
 import { productRoutes } from "./product/product.routes";
 import orderRouter from "./Order/order.routes";
+import { adminPlanPurchaseRoutes } from "./Admin/Admin.planpurchase.routes";
 
 const v1: Router = express.Router();
 
@@ -28,6 +29,7 @@ v1.use("/health", health);
 
 v1.use("/admin", adminRouter);
 v1.use("/admin", adminAuthRouter);
+v1.use("/admin/planpurchase", adminPlanPurchaseRoutes);
 v1.use("/user", userManageRoutes);
 v1.use("/plan", adminplanRouter);
 v1.use("/config", adminconfigRoutes);

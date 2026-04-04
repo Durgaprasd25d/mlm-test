@@ -1,11 +1,21 @@
-import { USER_BASE_URL } from "../config/api.config";
+import { BASE_URL } from "../config/api.config";
+import { refreshTokeApi } from "./auth.api";
 
 export const getPendingPlanPurchasesApi = async () => {
-  const res = await fetch(`${USER_BASE_URL}/v1/planpurchase/details/pending`, {
+  let res = await fetch(`${BASE_URL}/v1/admin/planpurchase/pending`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
+
+  if (res.status === 401) {
+    await refreshTokeApi();
+    res = await fetch(`${BASE_URL}/v1/admin/planpurchase/pending`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+  }
 
   const json = await res.json().catch(() => ({}));
 
@@ -17,11 +27,20 @@ export const getPendingPlanPurchasesApi = async () => {
 };
 
 export const approvePlanPurchaseApi = async (id: number) => {
-  const res = await fetch(`${USER_BASE_URL}/v1/planpurchase/approve/${id}`, {
+  let res = await fetch(`${BASE_URL}/v1/admin/planpurchase/approve/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
+
+  if (res.status === 401) {
+    await refreshTokeApi();
+    res = await fetch(`${BASE_URL}/v1/admin/planpurchase/approve/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+  }
 
   const json = await res.json().catch(() => ({}));
 
@@ -31,12 +50,22 @@ export const approvePlanPurchaseApi = async (id: number) => {
 
   return json;
 };
+
 export const rejectPlanPurchaseApi = async (id: number) => {
-  const res = await fetch(`${USER_BASE_URL}/v1/planpurchase/reject/${id}`, {
+  let res = await fetch(`${BASE_URL}/v1/admin/planpurchase/reject/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
+
+  if (res.status === 401) {
+    await refreshTokeApi();
+    res = await fetch(`${BASE_URL}/v1/admin/planpurchase/reject/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+  }
 
   const json = await res.json().catch(() => ({}));
 
