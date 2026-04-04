@@ -1,1 +1,1 @@
-export const REFERRAL_LINK="http://localhost:5173";
+export const REFERRAL_LINK="https://mindvex.cloud";
