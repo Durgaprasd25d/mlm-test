@@ -8,26 +8,20 @@ import {
   Divider,
   Grid,
   Typography,
-  Button,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Paper,
   Tabs,
   Tab,
   Stack,
   IconButton,
 } from "@mui/material";
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Wallet,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Coins,
   TrendingUp,
   History,
   ChevronRight,
@@ -39,15 +33,20 @@ import {
 import { useWallet } from "../../hooks/wallet/getWallet";
 import { useWalletHistory } from "../../hooks/wallet/useWalletHistory";
 import { useIncomeHistory } from "../../hooks/income/useIncomeHistory";
-import designConfig, { alpha } from "../../config/designConfig";
+import designConfig from "../../config/designConfig";
 
 const MyWallets = () => {
-  const navigate = useNavigate();
-  const { data: wallet, isLoading: isWalletLoading, isError: isWalletError } = useWallet();
+  const { data: walletData, isLoading: isWalletLoading, isError: isWalletError } = useWallet();
   const { data: walletHistory, isLoading: isWalletHistoryLoading } = useWalletHistory();
   const { data: incomeHistoryData, isLoading: isIncomeHistoryLoading } = useIncomeHistory();
 
   const [tabIndex, setTabIndex] = useState(0);
+
+  // Unwrapping the actual wallet object from the nested response
+  // structure: { data: { data: [wallet] } }
+  const wallet = useMemo(() => {
+    return (walletData as any)?.data?.data?.[0] || null;
+  }, [walletData]);
 
   const mainBalance = useMemo(() => {
     if (!wallet) return 0;
@@ -101,28 +100,13 @@ const MyWallets = () => {
   const filteredHistory = useMemo(() => {
     if (tabIndex === 0) return history; // All
     if (tabIndex === 1) return history.filter(h => h.id.startsWith('income-')); // Show only detailed breakdown for Incomes
-    // if (tabIndex === 2) return history.filter(h => !h.isCredit); // Expenses
     return history;
   }, [history, tabIndex]);
 
   if (isWalletLoading || isWalletHistoryLoading || isIncomeHistoryLoading)
     return (
-      <Box p={5} textAlign="center">
+      <Box p={5} textAlign="center" sx={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <CircularProgress />
-      </Box>
-    );
-
-  if (isWalletError)
-    return (
-      <Box p={5}>
-        <Alert severity="error">Failed to fetch wallet data</Alert>
-      </Box>
-    );
-
-  if (!wallet)
-    return (
-      <Box p={5}>
-        <Typography>No Wallet Found</Typography>
       </Box>
     );
 
@@ -153,7 +137,7 @@ const MyWallets = () => {
     },
     {
       label: "Product (DP) Wallet",
-      value: wallet.balance_dp_amount,
+      value: wallet?.balance_dp_amount || 0,
       color: "#2E7D32",
       icon: <CreditCard size={24} />,
       bgColor: "#E8F5E9",
@@ -161,7 +145,7 @@ const MyWallets = () => {
     },
     {
       label: "Settled Payouts",
-      value: Number(wallet.total_withdraw),
+      value: Number(wallet?.total_withdraw || 0),
       color: "#9C27B0",
       icon: <History size={24} />,
       bgColor: "#F3E5F5",
@@ -181,27 +165,18 @@ const MyWallets = () => {
             Manage your earnings, bonuses, and transaction history
           </Typography>
         </Box>
-        {/* <Button
-          variant="contained"
-          startIcon={<ArrowUpRight size={18} />}
-          sx={{
-            borderRadius: 3,
-            px: 3,
-            py: 1.2,
-            textTransform: 'none',
-            fontWeight: 700,
-            boxShadow: designConfig.shadows.primary
-          }}
-          href="/wallet/withdraw"
-        >
-          Withdraw Funds
-        </Button> */}
       </Stack>
+
+      {isWalletError && (
+        <Alert severity="warning" sx={{ mb: 4, borderRadius: 3 }}>
+          Some wallet information could not be retrieved. Values shown might be incomplete.
+        </Alert>
+      )}
 
       {/* 🚀 Main Entities Grid */}
       <Grid container spacing={3} mb={5}>
         {ENTITIES.map((entity, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={index}>
+          <Grid item xs={12} sm={6} md={4} key={index}>
             <Card
               sx={{
                 borderRadius: 4,
@@ -238,29 +213,6 @@ const MyWallets = () => {
                 <Typography variant="caption" color="text.secondary">
                   {entity.description}
                 </Typography>
-
-                {/* <Divider sx={{ my: 2 }} />
-                <Button
-                  fullWidth
-                  variant="text"
-                  size="small"
-                  sx={{
-                    fontWeight: 700,
-                    color: entity.color,
-                    justifyContent: 'flex-start',
-                    px: 0,
-                    '&:hover': { background: 'transparent', opacity: 0.8 }
-                  }}
-                  onClick={() => {
-                    if (entity.link) {
-                      navigate(entity.link);
-                    } else {
-                      setTabIndex(index === 0 ? 0 : index);
-                    }
-                  }}
-                >
-                  View History
-                </Button> */}
               </CardContent>
             </Card>
           </Grid>
@@ -285,7 +237,6 @@ const MyWallets = () => {
         >
           <Tab label="All Activity" />
           <Tab label="Incomes" />
-          {/* <Tab label="Purchases/Withdrawals" /> */}
         </Tabs>
 
         <TableContainer sx={{ maxHeight: 600 }}>

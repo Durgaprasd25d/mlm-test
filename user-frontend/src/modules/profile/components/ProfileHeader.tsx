@@ -67,14 +67,20 @@ export const ProfileHeader = () => {
                 <Box display="flex" alignItems="center" gap={2}>
                     <Box sx={{ position: "relative" }}>
                         <Avatar
-                            src="https://loremflickr.com/150/150/portrait,man?lock=1"
                             sx={{
                                 width: 65,
                                 height: 65,
                                 border: "2px solid rgba(255,255,255,0.35)",
                                 boxShadow: designConfig.shadows.md,
+                                bgcolor: designConfig.colors.primary.main,
+                                color: "white",
+                                fontWeight: 800,
+                                fontSize: "1.5rem",
                             }}
-                        />
+                        >
+                            {user?.firstName?.[0]?.toUpperCase()}
+                            {user?.lastName?.[0]?.toUpperCase()}
+                        </Avatar>
 
                         <IconButton
                             size="small"

@@ -82,8 +82,9 @@ export const HierarchyDetails = ({ renderMenu }: { renderMenu: () => React.React
                 </Typography>
                 {member ? (
                     <Box display="flex" alignItems="center" gap={2}>
-                        <Avatar sx={{ bgcolor: color, width: 40, height: 40, fontSize: "1rem" }}>
-                            {member.firstName[0]}
+                        <Avatar sx={{ bgcolor: color, width: 40, height: 40, fontSize: "1rem", fontWeight: 700 }}>
+                            {member.firstName?.[0]?.toUpperCase()}
+                            {member.lastName?.[0]?.toUpperCase()}
                         </Avatar>
                         <Box>
                             <Typography variant="body1" fontWeight={700}>
