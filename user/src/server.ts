@@ -25,6 +25,7 @@ const asyncHandler =
 
 export const createServer = () => {
   const app = express();
+  app.set("trust proxy", 1);
   app
     .disable("x-powered-by")
     .use(morganMiddleware)

@@ -60,7 +60,7 @@ const config = {
     password: envVars.MAIL_PASSWORD,
   },
   adminEmail: envVars.ADMIN_EMAIL,
-  corsOrigins: envVars.CORS_ORIGINS.split(","),
+  corsOrigins: envVars.CORS_ORIGINS.split(",").map((o: string) => o.trim().replace(/^"(.*)"$/, '$1')),
   business: {
     deliveryCharge: envVars.DELIVERY_CHARGE,
     taxPercentage: envVars.TAX_PERCENTAGE,

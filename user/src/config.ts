@@ -65,7 +65,7 @@ const config = {
     password: envVars.MAIL_PASSWORD,
   },
   adminEmail: envVars.ADMIN_EMAIL,
-  corsOrigins: envVars.CORS_ORIGINS.split(","),
+  corsOrigins: envVars.CORS_ORIGINS.split(",").map((o: string) => o.trim().replace(/^"(.*)"$/, '$1')),
   cloudinary: {
     cloudName: envVars.CLOUDINARY_CLOUD_NAME,
     apiKey: envVars.CLOUDINARY_API_KEY,
