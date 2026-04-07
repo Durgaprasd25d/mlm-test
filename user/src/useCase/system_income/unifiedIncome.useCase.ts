@@ -10,7 +10,13 @@ export const getUnifiedIncomeHistory = async (userId: number) => {
   const binaryIncomes = await prisma.systemIncome.findMany({
     where: { user_id: userId, status: "ACTIVE" },
     include: {
-      generateIncome: true,
+      generateIncome: {
+        include: {
+          IncomeHistory: {
+            where: { userId }
+          }
+        }
+      }
     },
     orderBy: { createdAt: "desc" },
   });
@@ -19,39 +25,51 @@ export const getUnifiedIncomeHistory = async (userId: number) => {
   const royaltyIncomes = await prisma.royalClubIncome.findMany({
     where: { user_id: userId, status: "ACTIVE" },
     include: {
-      generateIncome: true,
+      generateIncome: {
+        include: {
+          IncomeHistory: {
+            where: { userId }
+          }
+        }
+      }
     },
     orderBy: { createdAt: "desc" },
   });
 
   // ── Format binary entries ─────────────────────────────────────────────
-  const binaryFormatted = binaryIncomes.map((si) => ({
-    id: si.id,
-    type: "BINARY" as const,
-    date: si.createdAt,
-    grossIncome: Number(si.generateIncome?.totalIncome || si.income),
-    netIncome: Number(si.income),
-    tds: Number(si.generateIncome?.tds || 0),
-    adminCharges: Number(si.generateIncome?.adminCharges || 0),
-    matchedBV: si.matched_bv,
-    message: si.message_data || "",
-    // Contributors parsed from message_data or fetched separately
-    contributors: parseContributorsFromMessage(si.message_data || ""),
-  }));
+  const binaryFormatted = binaryIncomes.map((si) => {
+    const history = si.generateIncome?.IncomeHistory?.[0];
+    return {
+      id: si.id,
+      type: "BINARY" as const,
+      date: si.createdAt,
+      grossIncome: Number(history?.totalIncome || si.income),
+      netIncome: Number(si.income),
+      tds: Number(history?.tds || 0),
+      adminCharges: Number(history?.adminCharges || 0),
+      matchedBV: si.matched_bv,
+      message: si.message_data || "",
+      // Contributors parsed from message_data or fetched separately
+      contributors: parseContributorsFromMessage(si.message_data || ""),
+    };
+  });
 
   // ── Format royalty entries ────────────────────────────────────────────
-  const royaltyFormatted = royaltyIncomes.map((ri) => ({
-    id: ri.id,
-    type: "ROYALTY" as const,
-    date: ri.createdAt,
-    grossIncome: Number(ri.generateIncome?.totalIncome || ri.income),
-    netIncome: Number(ri.income),
-    tds: Number(ri.generateIncome?.tds || 0),
-    adminCharges: Number(ri.generateIncome?.adminCharges || 0),
-    matchedBV: null,
-    message: ri.message_data || "",
-    contributors: parseContributorsFromMessage(ri.message_data || ""),
-  }));
+  const royaltyFormatted = royaltyIncomes.map((ri) => {
+    const history = ri.generateIncome?.IncomeHistory?.[0];
+    return {
+      id: ri.id,
+      type: "ROYALTY" as const,
+      date: ri.createdAt,
+      grossIncome: Number(history?.totalIncome || ri.income),
+      netIncome: Number(ri.income),
+      tds: Number(history?.tds || 0),
+      adminCharges: Number(history?.adminCharges || 0),
+      matchedBV: null,
+      message: ri.message_data || "",
+      contributors: parseContributorsFromMessage(ri.message_data || ""),
+    };
+  });
 
   // ── Merge and sort by date desc ───────────────────────────────────────
   const merged = [...binaryFormatted, ...royaltyFormatted].sort(

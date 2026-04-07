@@ -290,9 +290,9 @@ export const getTeamStats = async (userId: number) => {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: {
-      leftChildId: true,
-      rightChildId: true,
+    include: {
+      leftChild: { select: { lineagePath: true } },
+      rightChild: { select: { lineagePath: true } },
     },
   });
 
@@ -300,25 +300,23 @@ export const getTeamStats = async (userId: number) => {
     throw AppError.notFound("User not found");
   }
 
-  const processSide = async (childId?: number) => {
-    if (!childId) {
+  const processSide = async (lineagePath?: string) => {
+    if (!lineagePath) {
       return { count: 0, totalBV: 0, totalIncome: 0 };
     }
 
-    const pattern = `/${childId}/`;
-
     const [count, totalBV, totalIncome] = await Promise.all([
-      userRepository.countUsersByLineage(pattern),
-      userRepository.sumBVByLineage(pattern),
-      userRepository.sumIncomeByLineage(pattern),
+      userRepository.countUsersByLineage(lineagePath),
+      userRepository.sumBVByLineage(lineagePath),
+      userRepository.sumIncomeByLineage(lineagePath),
     ]);
 
     return { count, totalBV, totalIncome };
   };
 
   const [left, right] = await Promise.all([
-    processSide(user.leftChildId ?? undefined),
-    processSide(user.rightChildId ?? undefined),
+    processSide(user.leftChild?.lineagePath),
+    processSide(user.rightChild?.lineagePath),
   ]);
 
   return {

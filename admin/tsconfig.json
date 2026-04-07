@@ -10,7 +10,8 @@
     "paths": {
       "@/*": ["src/*"],
       "@errors/*": ["src/errors/*"]
-    }
+    },
+    "lib": ["ES2020", "ES2015", "ES2017", "DOM"]
   },
   "include": ["src/**/*", "rahulscema.ts"],
   "exclude": ["node_modules", "dist"],

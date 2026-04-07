@@ -40,6 +40,7 @@ export const getAll = async (
       memberId: user.memberId ?? "",
       legPosition: user.legPosition ?? "",
       status: user.status,
+      kycStatus: user.kycStatus,
     }));
 
     res.status(200).json({
@@ -74,6 +75,7 @@ export const getOne = async (
       memberId: user.memberId ?? "",
       legPosition: user.legPosition ?? "",
       status: user.status,
+      kycStatus: user.kycStatus,
     };
 
     res.status(200).json({

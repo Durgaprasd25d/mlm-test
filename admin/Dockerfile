@@ -1,5 +1,7 @@
 FROM node:22-alpine
 RUN apk add --no-cache openssl libc6-compat wget
+ENV TZ=Asia/Kolkata
+
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

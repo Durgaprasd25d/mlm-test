@@ -282,22 +282,24 @@ export const userIdUpdate = async (
   );
 };
 
-export const countUsersByLineage = async (pattern: string) => {
+export const countUsersByLineage = async (lineagePath: string) => {
   return prisma.user.count({
     where: {
-      lineagePath: {
-        contains: pattern,
-      },
+      OR: [
+        { lineagePath: lineagePath },
+        { lineagePath: { startsWith: `${lineagePath},` } },
+      ],
     },
   });
 };
 
-export const sumBVByLineage = async (pattern: string) => {
+export const sumBVByLineage = async (lineagePath: string) => {
   const users = await prisma.user.findMany({
     where: {
-      lineagePath: {
-        contains: pattern,
-      },
+      OR: [
+        { lineagePath: lineagePath },
+        { lineagePath: { startsWith: `${lineagePath},` } },
+      ],
     },
     select: { id: true },
   });
@@ -318,12 +320,13 @@ export const sumBVByLineage = async (pattern: string) => {
   return Number(result._sum.bv || 0);
 };
 
-export const sumIncomeByLineage = async (pattern: string) => {
+export const sumIncomeByLineage = async (lineagePath: string) => {
   const users = await prisma.user.findMany({
     where: {
-      lineagePath: {
-        contains: pattern,
-      },
+      OR: [
+        { lineagePath: lineagePath },
+        { lineagePath: { startsWith: `${lineagePath},` } },
+      ],
     },
     select: { id: true },
   });

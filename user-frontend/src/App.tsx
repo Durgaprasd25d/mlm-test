@@ -59,6 +59,7 @@ const ProductDetails = lazy(() => import("./modules/shop/ProductDetails"));
 const Contact = lazy(() => import("./modules/support/Contact"));
 const Faqs = lazy(() => import("./modules/support/Faqs"));
 const AddressSelection = lazy(() => import("./modules/user/AddressSelection"));
+const NotFound = lazy(() => import("./components/common/NotFound"));
 
 const theme = createTheme({
   palette: {
@@ -164,6 +165,9 @@ function App() {
                 <Route path="/order-tracking/:id" element={<OrderTracking />} />
                 <Route path="/bv-ledger" element={<BvLedger />} />
               </Route>
+              
+              {/* Catch all - 404 Page */}
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </BrowserRouter>

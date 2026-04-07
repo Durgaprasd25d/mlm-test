@@ -16,8 +16,24 @@ import {
   Stack,
   Typography,
   alpha,
+  Divider,
+  Stepper,
+  Step,
+  StepLabel,
+  useTheme,
+  useMediaQuery,
 } from "@mui/material";
-import { Info, ListChecks, Sparkles } from "lucide-react";
+import { 
+  ShoppingBag, 
+  Upload, 
+  QrCode, 
+  CreditCard, 
+  ChevronRight,
+  ArrowLeft,
+  CheckCircle2,
+  AlertCircle,
+  FileText
+} from "lucide-react";
 import React, { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePlan } from "../../hooks/plan/useGetAllplans";
@@ -28,12 +44,18 @@ import type { Plan } from "./components/PlanCard";
 
 type PurchaseType = "FIRST_PURCHASE" | "REPURCHASE" | "SHARE_PURCHASE" | "";
 
+const STEPS = ["Setup", "Payment"];
+
 export default function PlanPage() {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  
   const { data: plans = [], isLoading, isError, error } = usePlan();
   const { mutate: purchasePlan, isPending } = usePurchasePlan();
   const { data: purchaseData } = usePurchasesByUser();
 
   const [open, setOpen] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [paymentType, setPaymentType] = useState("");
   const [purchaseType, setPurchaseType] = useState<PurchaseType>("");
@@ -52,6 +74,7 @@ export default function PlanPage() {
   const handleOpen = (plan: Plan) => {
     setSelectedPlan(plan);
     setOpen(true);
+    setActiveStep(0);
   };
 
   const handleClose = () => {
@@ -60,6 +83,7 @@ export default function PlanPage() {
     setPaymentType("");
     setPurchaseType("");
     setProofUrl("");
+    setActiveStep(0);
   };
 
   const handleProofUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,6 +131,18 @@ export default function PlanPage() {
       }
     );
   };
+
+  const handleNext = () => {
+    if (activeStep === 0) {
+      if (!paymentType || (showPurchaseTypeDropdown && !purchaseType)) {
+        toast.error("Please complete all fields");
+        return;
+      }
+      setActiveStep(1);
+    }
+  };
+
+  const handleBack = () => setActiveStep(0);
 
   if (isLoading) {
     return (
@@ -165,138 +201,285 @@ export default function PlanPage() {
         ))}
       </Grid>
 
-      {/* Benefits Info Box */}
-      {/* <Box
-        sx={{
-          mt: 10,
-          p: 4,
-          borderRadius: 6,
-          bgcolor: alpha("#6366f1", 0.03),
-          border: "1px solid",
-          borderColor: alpha("#6366f1", 0.1),
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 4,
-          alignItems: "center",
+      {/* Purchase Dialog */}
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: 5,
+            backgroundImage: "none",
+            overflow: "hidden",
+            boxShadow: "0 25px 50px -12px rgba(0,0,0,0.2)"
+          }
         }}
       >
-        <Box
-          sx={{
-            p: 2,
-            borderRadius: 4,
-            bgcolor: "#fff",
-            boxShadow: "0 10px 20px rgba(99, 102, 241, 0.1)",
-            display: "flex",
-          }}
-        >
-          <Info size={32} color="#6366f1" />
-        </Box>
-        <Box>
-          <Typography variant="h6" fontWeight={800} color="#1e1b4b" gutterBottom>
-            Flexible Upgrade Anytime
-          </Typography>
-          <Typography variant="body2" color="#475569" sx={{ lineHeight: 1.6 }}>
-            You can start with a basic plan and re-purchase higher tiers as your network grows.
-            Higher BV plans unlock significantly better matching bonuses and daily income caps.
-          </Typography>
-        </Box>
-      </Box> */}
-
-      {/* Purchase Dialog */}
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 5 } }}>
-        <DialogTitle sx={{ p: 4, pb: 2 }} component="div">
-          <Typography variant="h5" fontWeight={900}>Confirm Package Selection</Typography>
-          <Typography variant="caption" color="text.secondary">Step through to complete your purchase</Typography>
+        <DialogTitle sx={{ p: 0 }} component="div">
+          <Box sx={{ p: 3, px: { xs: 3, md: 5 }, bgcolor: "#fff", borderBottom: "1px solid #f1f5f9" }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box sx={{ p: 1, borderRadius: 2, bgcolor: alpha(theme.palette.primary.main, 0.1), color: theme.palette.primary.main, display: "flex" }}>
+                  <ShoppingBag size={22} />
+                </Box>
+                <Box>
+                  <Typography variant="h6" fontWeight={800} sx={{ lineHeight: 1.2 }}>Checkout</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={500}>Plan Activation Process</Typography>
+                </Box>
+              </Stack>
+              <Stepper 
+                activeStep={activeStep} 
+                sx={{ 
+                  width: isMobile ? "100px" : "220px",
+                  '& .MuiStepConnector-line': { borderTopWidth: 2 }
+                }}
+              >
+                {STEPS.map((label) => (
+                  <Step key={label} padding={0}>
+                    <StepLabel 
+                      StepIconProps={{ 
+                        sx: { 
+                          width: 24, height: 24,
+                          '&.Mui-active': { color: 'primary.main' },
+                          '&.Mui-completed': { color: 'success.main' }
+                        } 
+                      }}
+                    >
+                      {!isMobile && <Typography variant="caption" fontWeight={700} sx={{ mt: 0.5 }}>{label}</Typography>}
+                    </StepLabel>
+                  </Step>
+                ))}
+              </Stepper>
+            </Stack>
+          </Box>
         </DialogTitle>
 
-        <DialogContent sx={{ p: 4, py: 1 }}>
+        <DialogContent sx={{ p: 0, overflowY: "auto", minHeight: { md: 450 } }}>
           {selectedPlan && (
-            <Stack spacing={3} sx={{ mt: 2 }}>
-              <Paper sx={{ p: 2.5, bgcolor: "#f8fafc", borderRadius: 3, border: "1px solid #e2e8f0" }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
-                  <Box>
-                    <Typography variant="subtitle2" fontWeight={800} color="#64748b">Selected Plan</Typography>
-                    <Typography variant="h6" fontWeight={800}>{selectedPlan.planName}</Typography>
-                  </Box>
-                  <Typography variant="h5" fontWeight={900} color="primary">₹{selectedPlan.price}</Typography>
-                </Stack>
-              </Paper>
-
-              {showPurchaseTypeDropdown && (
-                <FormControl fullWidth size="small">
-                  <InputLabel>Transaction Mode</InputLabel>
-                  <Select
-                    value={purchaseType}
-                    label="Transaction Mode"
-                    onChange={(e: any) => setPurchaseType(e.target.value as PurchaseType)}
-                    sx={{ borderRadius: 2 }}
-                  >
-                    <MenuItem value="REPURCHASE">Re-Purchase (Standard Upgrade)</MenuItem>
-                    <MenuItem value="SHARE_PURCHASE">Share-Purchase (Team Assignment)</MenuItem>
-                  </Select>
-                </FormControl>
-              )}
-
-              <FormControl fullWidth size="small">
-                <InputLabel>Payment Source</InputLabel>
-                <Select
-                  value={paymentType}
-                  label="Payment Source"
-                  onChange={(e: any) => setPaymentType(e.target.value)}
-                  sx={{ borderRadius: 2 }}
-                >
-                  <MenuItem value="UPI">UPI Transfer (Instant)</MenuItem>
-                  <MenuItem value="Bank">Direct Bank Transfer</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Box sx={{ p: 3, bgcolor: alpha("#1e293b", 0.02), borderRadius: 4, border: "1px solid #e2e8f0", textAlign: "center" }}>
-                <Typography variant="caption" fontWeight={800} color="text.secondary" display="block" mb={2}>
-                  SCAN TO COMPLETE PAYMENT
+            <Grid container sx={{ minHeight: "100%" }}>
+              {/* Left Column: Plan Summary (Always visible) */}
+              <Grid item xs={12} md={4.8} sx={{ p: { xs: 3, md: 5 }, bgcolor: "#f8fafc", borderRight: { md: "1px solid #f1f5f9" } }}>
+                <Typography variant="subtitle2" fontWeight={800} color="text.secondary" sx={{ letterSpacing: "0.05em", mb: 3, display: "flex", alignItems: "center", gap: 1 }}>
+                  <FileText size={16} /> ORDER SUMMARY
                 </Typography>
-                <Box
-                  component="img"
-                  src="https://static.vecteezy.com/system/resources/previews/017/441/744/original/qr-code-icon-qr-code-sample-for-smartphone-scanning-isolated-illustration-vector.jpg"
-                  sx={{ width: 160, height: 160, mx: "auto", borderRadius: 2, mb: 2 }}
-                />
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Transfer ₹{selectedPlan.price} then upload the receipt below.
-                </Typography>
-              </Box>
+                
+                <Paper elevation={0} sx={{ p: 3, mb: 4, bgcolor: "#fff", borderRadius: 4, border: "1px solid #e2e8f0", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+                  <Typography variant="caption" fontWeight={800} color="primary" sx={{ mb: 0.5, display: "block", letterSpacing: 1 }}>PLAN DETAILS</Typography>
+                  <Typography variant="h5" fontWeight={900} sx={{ color: "#0f172a" }}>{selectedPlan.planName}</Typography>
+                  
+                  <Divider sx={{ my: 2.5, borderStyle: "dashed", borderColor: "#cbd5e1" }} />
+                  
+                  <Stack spacing={2}>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Retail Price</Typography>
+                      <Typography variant="body2" fontWeight={700} sx={{ color: "#334155" }}>₹{selectedPlan.price}</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between">
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Point Value</Typography>
+                      <Typography variant="body2" fontWeight={800} color="secondary.main">{selectedPlan.BV} BV</Typography>
+                    </Stack>
+                    <Stack direction="row" justifyContent="space-between" sx={{ pt: 1 }}>
+                      <Typography variant="subtitle1" fontWeight={800} sx={{ color: "#0f172a" }}>Amount Payable</Typography>
+                      <Typography variant="h6" fontWeight={900} color="primary">₹{selectedPlan.price}</Typography>
+                    </Stack>
+                  </Stack>
+                </Paper>
 
-              <Button
-                component="label"
-                variant="outlined"
-                fullWidth
-                sx={{ py: 1.5, borderRadius: 3, borderStyle: "dashed", fontWeight: 700 }}
-              >
-                {uploading ? "Uploading..." : proofUrl ? "Change Proof" : "Upload Payment Screenshot"}
-                <input hidden type="file" onChange={handleProofUpload} />
-              </Button>
+                {/* <Box sx={{ p: 2.5, borderRadius: 4, bgcolor: alpha("#6366f1", 0.06), border: "1px solid", borderColor: alpha("#6366f1", 0.12) }}>
+                  <Stack direction="row" spacing={1.5}>
+                    <AlertCircle size={18} color="#6366f1" style={{ flexShrink: 0, marginTop: 2 }} />
+                    <Typography variant="caption" color="#475569" sx={{ lineHeight: 1.5, fontWeight: 500 }}>
+                      Verify transaction details before submission. Approvals take 2-4 hours.
+                    </Typography>
+                  </Stack>
+                </Box> */}
+              </Grid>
 
-              {proofUrl && (
-                <Stack direction="row" spacing={2} alignItems="center" sx={{ p: 1, bgcolor: "#f0fdf4", borderRadius: 2, border: "1px solid #dcfce7" }}>
-                  <Box component="img" src={proofUrl} sx={{ width: 48, height: 48, borderRadius: 1.5, objectFit: "cover" }} />
-                  <Typography variant="caption" fontWeight={700} color="#166534">Receipt verified for submission</Typography>
-                </Stack>
-              )}
-            </Stack>
+              {/* Right Column: Interaction Area */}
+              <Grid item xs={12} md={7.2} sx={{ p: { xs: 4, md: 5 } }}>
+                {activeStep === 0 ? (
+                  <Stack spacing={4} sx={{ height: "100%", justifyContent: "center", alignItems: "center", textAlign: 'center' }}>
+                    <Box>
+                      <Typography variant="h6" fontWeight={800} sx={{ color: "#0f172a", mb: 1 }}>1. Configure Purchase</Typography>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Define the purchase scope and payment method</Typography>
+                    </Box>
+
+                    <Stack spacing={3} sx={{ width: '100%', maxWidth: 420 }}>
+                      {showPurchaseTypeDropdown && (
+                        <FormControl fullWidth>
+                          <InputLabel>Purchase Purpose</InputLabel>
+                          <Select
+                            value={purchaseType}
+                            label="Purchase Purpose"
+                            onChange={(e: any) => setPurchaseType(e.target.value as PurchaseType)}
+                            sx={{ borderRadius: 3, bgcolor: "#fff", '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' } }}
+                          >
+                            <MenuItem value="REPURCHASE" sx={{ py: 1.5 }}>
+                              <Stack textAlign="left">
+                                <Typography variant="body2" fontWeight={700}>Re-Purchase</Typography>
+                                <Typography variant="caption" color="text.secondary">Upgrade your current position</Typography>
+                              </Stack>
+                            </MenuItem>
+                            <MenuItem value="SHARE_PURCHASE" sx={{ py: 1.5 }}>
+                              <Stack textAlign="left">
+                                <Typography variant="body2" fontWeight={700}>Share-Purchase</Typography>
+                                <Typography variant="caption" color="text.secondary">Assign this plan to a direct downline</Typography>
+                              </Stack>
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
+                      )}
+
+                      {!showPurchaseTypeDropdown && (
+                        <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, bgcolor: alpha(theme.palette.success.main, 0.05), border: "1px solid", borderColor: alpha(theme.palette.success.main, 0.15), display: "flex", gap: 2, alignItems: "center", justifyContent: 'center' }}>
+                          <CheckCircle2 size={22} color={theme.palette.success.main} />
+                          <Typography variant="body2" fontWeight={700} color="success.dark">
+                            New Member Activation Package
+                          </Typography>
+                        </Paper>
+                      )}
+
+                      <FormControl fullWidth>
+                        <InputLabel>Payment Method</InputLabel>
+                        <Select
+                          value={paymentType}
+                          label="Payment Method"
+                          onChange={(e: any) => setPaymentType(e.target.value)}
+                          sx={{ borderRadius: 3, bgcolor: "#fff", '& .MuiOutlinedInput-notchedOutline': { borderColor: '#e2e8f0' } }}
+                        >
+                          <MenuItem value="UPI" sx={{ py: 1.5 }}>
+                            <Stack direction="row" spacing={2} alignItems="center" textAlign="left">
+                              <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "#f1f5f9", display: "flex", color: "#64748b" }}>
+                                <QrCode size={18} />
+                              </Box>
+                              <Box>
+                                <Typography variant="body2" fontWeight={700}>Instant UPI Transfer</Typography>
+                                <Typography variant="caption" color="text.secondary">GPay, PhonePe, or Any UPI App</Typography>
+                              </Box>
+                            </Stack>
+                          </MenuItem>
+                          <MenuItem value="Bank" sx={{ py: 1.5 }}>
+                            <Stack direction="row" spacing={2} alignItems="center" textAlign="left">
+                              <Box sx={{ p: 1, borderRadius: 1.5, bgcolor: "#f1f5f9", display: "flex", color: "#64748b" }}>
+                                <CreditCard size={18} />
+                              </Box>
+                              <Box>
+                                <Typography variant="body2" fontWeight={700}>Manual Bank Deposit</Typography>
+                                <Typography variant="caption" color="text.secondary">IMPS, NEFT, or RTGS Transfer</Typography>
+                              </Box>
+                            </Stack>
+                          </MenuItem>
+                        </Select>
+                      </FormControl>
+                    </Stack>
+                  </Stack>
+                ) : (
+                  <Stack spacing={4} sx={{ height: "100%", justifyContent: "center", alignItems: "center", textAlign: 'center' }}>
+                    <Box>
+                      <Typography variant="h6" fontWeight={800} sx={{ color: "#0f172a", mb: 1 }}>2. Submit Payment Proof</Typography>
+                      <Typography variant="body2" color="text.secondary" fontWeight={500}>Scan the QR below and upload your success receipt</Typography>
+                    </Box>
+
+                    <Stack spacing={3} alignItems="center" sx={{ width: '100%' }}>
+                      <Box sx={{ p: 2, bgcolor: "#fff", borderRadius: 4, border: "1px solid #e2e8f0", textAlign: "center", boxShadow: "0 10px 20px -5px rgba(0,0,0,0.05)", width: 'fit-content' }}>
+                        <Box
+                          component="img"
+                          src="https://static.vecteezy.com/system/resources/previews/017/441/744/original/qr-code-icon-qr-code-sample-for-smartphone-scanning-isolated-illustration-vector.jpg"
+                          sx={{ width: 110, height: 110, borderRadius: 2, mb: 1 }}
+                        />
+                        <Typography variant="caption" fontWeight={800} color="text.secondary" sx={{ letterSpacing: 1, display: 'block' }}>SCAN TO PAY</Typography>
+                      </Box>
+                      
+                      <Stack spacing={2.5} sx={{ width: '100%', maxWidth: 360 }}>
+                        <Button
+                          component="label"
+                          variant="outlined"
+                          fullWidth
+                          startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <Upload size={20} />}
+                          sx={{
+                            py: 2,
+                            borderRadius: 4,
+                            borderStyle: "dashed",
+                            fontWeight: 800,
+                            borderWidth: 2,
+                            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                            borderColor: proofUrl ? "success.main" : "primary.main",
+                            color: proofUrl ? "success.main" : "primary.main",
+                            bgcolor: proofUrl ? alpha(theme.palette.success.main, 0.04) : "transparent",
+                            "&:hover": { borderWidth: 2, bgcolor: alpha(theme.palette.primary.main, 0.04), borderColor: 'primary.main' }
+                          }}
+                        >
+                          {uploading ? "Processing..." : proofUrl ? "Change Receipt" : "Upload Proof"}
+                          <input hidden type="file" onChange={handleProofUpload} />
+                        </Button>
+
+                        {proofUrl && (
+                          <Paper elevation={0} sx={{ p: 1.5, bgcolor: alpha(theme.palette.success.main, 0.06), borderRadius: 3, border: "1px solid", borderColor: alpha(theme.palette.success.main, 0.12), display: "flex", alignItems: "center", gap: 2, justifyContent: 'center' }}>
+                            <Box 
+                              component="img" 
+                              src={proofUrl} 
+                              sx={{ width: 44, height: 44, borderRadius: 2, objectFit: "cover", border: "2px solid #fff", boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} 
+                            />
+                            <Box textAlign="left">
+                              <Typography variant="subtitle2" fontWeight={800} color="success.dark" sx={{ lineHeight: 1 }}>Verified</Typography>
+                              <Typography variant="caption" color="success.dark" fontWeight={600}>Receipt attached</Typography>
+                            </Box>
+                          </Paper>
+                        )}
+                      </Stack>
+                    </Stack>
+
+                    <Box sx={{ p: 2, bgcolor: "#fffbeb", borderRadius: 3, border: "1px solid #fef3c7", maxWidth: 420 }}>
+                      <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+                        <Typography variant="caption" color="#92400e" sx={{ fontWeight: 600 }}>
+                          Ensure Transaction ID is visible in the screenshot.
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                )}
+              </Grid>
+            </Grid>
           )}
         </DialogContent>
 
-        <DialogActions sx={{ p: 4, pt: 2 }}>
-          <Button onClick={handleClose} sx={{ color: "text.secondary", fontWeight: 700 }}>Cancel</Button>
+        <Divider />
+
+        <DialogActions sx={{ p: 3, px: { xs: 3, md: 5 }, bgcolor: "#fff", justifyContent: "space-between" }}>
+          <Button 
+            onClick={activeStep === 0 ? handleClose : handleBack} 
+            startIcon={activeStep === 1 ? <ArrowLeft size={20} /> : null}
+            sx={{ color: "text.secondary", fontWeight: 800, px: 3, borderRadius: 2 }}
+          >
+            {activeStep === 0 ? "Cancel" : "Go Back"}
+          </Button>
+          
           <Button
             variant="contained"
-            onClick={handleConfirm}
-            fullWidth
-            disabled={!paymentType || !proofUrl || isPending || (hasPurchasedBefore && !purchaseType)}
-            sx={{ py: 1.5, borderRadius: 3, fontWeight: 800, boxShadow: "0 8px 20px rgba(37, 99, 235, 0.25)" }}
+            onClick={activeStep === 0 ? handleNext : handleConfirm}
+            disabled={
+              (activeStep === 0 && (!paymentType || (showPurchaseTypeDropdown && !purchaseType))) ||
+              (activeStep === 1 && (!proofUrl || isPending))
+            }
+            endIcon={activeStep === 0 ? <ChevronRight size={20} /> : <CheckCircle2 size={20} />}
+            sx={{
+              py: 1.5,
+              px: activeStep === 0 ? 5 : 7,
+              borderRadius: 3,
+              fontWeight: 900,
+              boxShadow: "0 10px 15px -3px rgba(99, 102, 241, 0.35)",
+              textTransform: "none",
+              fontSize: "1rem",
+              transition: 'all 0.2s',
+              '&:hover': { boxShadow: "0 12px 20px -3px rgba(99, 102, 241, 0.45)", transform: 'translateY(-1px)' }
+            }}
           >
-            {isPending ? "Configuring Account..." : "Confirm & Send"}
+            {activeStep === 0 ? "Continue" : isPending ? "Activating..." : "Complete Purchase"}
           </Button>
         </DialogActions>
       </Dialog>
     </Container>
   );
 }
+  

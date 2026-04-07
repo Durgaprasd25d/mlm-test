@@ -110,7 +110,7 @@ export const getIncomeGenarateRepo = async () => {
           user_id: userId,
           generateIncomeId: batch.id,
           matched_bv: matchedBv,
-          income: gross,
+          income: bNet, // Updated to use net income for consistency
           message_data: `Binary match ${matchedBv}`,
           status: "ACTIVE",
         },
@@ -124,7 +124,7 @@ export const getIncomeGenarateRepo = async () => {
           left_carryforward_bv: newLeftCarry,
           right_carryforward_bv: newRightCarry,
           matched_bv: (wallet?.matched_bv || 0) + matchedBv,
-          total_income: { increment: gross },
+          total_income: { increment: bNet }, // Now correctly increments by net income
         },
         create: {
           user_id: userId,

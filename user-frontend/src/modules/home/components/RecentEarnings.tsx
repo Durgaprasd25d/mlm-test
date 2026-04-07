@@ -138,7 +138,7 @@ export default function RecentEarnings() {
                 )}
             </CardContent>
             <Box sx={{ p: '12px 24px 24px' }}>
-                <Button
+                {/* <Button
                     fullWidth
                     variant="outlined"
                     endIcon={<ArrowForwardIosIcon sx={{ fontSize: '12px !important' }} />}
@@ -155,7 +155,7 @@ export default function RecentEarnings() {
                     }}
                 >
                     Explore All Transactions
-                </Button>
+                </Button> */}
             </Box>
         </Card>
     );

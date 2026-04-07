@@ -6,7 +6,8 @@ import morganMiddleware from "./middleware/morgan-middleware";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import errorHandler from "./middleware/error-handler";
-// import "./corn/corn";
+// import "./cron/cron";
+import "./cron/income.cron";
 
 export const createServer = () => {
   const app = express();

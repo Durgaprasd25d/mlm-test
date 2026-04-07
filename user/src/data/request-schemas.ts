@@ -296,7 +296,7 @@ export const systemIncomeQuerySchema = Joi.object({
   fromDate: Joi.date().iso().optional(),
   toDate: Joi.date().iso().optional(),
 })
-  .xor("period", "fromDate")
+  .oxor("period", "fromDate")
   .with("fromDate", "toDate");
 
 //wallet
@@ -308,7 +308,7 @@ export const walletQuerySchema = Joi.object({
   fromDate: Joi.date().iso().optional(),
   toDate: Joi.date().iso().optional(),
 })
-  .xor("period", "fromDate")
+  .oxor("period", "fromDate")
   .with("fromDate", "toDate");
 
 //createOrder

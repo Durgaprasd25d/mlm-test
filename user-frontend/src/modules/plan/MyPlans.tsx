@@ -40,6 +40,7 @@ import { sharePlanToDirect } from '../../api/plan.api';
 import { getMyDirectsApi } from '../../api/user.api';
 import { usePurchasesByUser } from '../../hooks/plan/usePurchasesByUser';
 import { useWallet } from '../../hooks/useWallet';
+import { useUserProfile } from '../../hooks/profile/useProfile';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
@@ -48,6 +49,8 @@ export default function MyPlans() {
     const navigate = useNavigate();
     const { data: purchaseData, isLoading: isPurchasesLoading, refetch: refetchPurchases } = usePurchasesByUser();
     const { data: walletData, isLoading: isWalletLoading } = useWallet();
+    const { data: userData, isLoading: isUserLoading } = useUserProfile();
+
     const [directs, setDirects] = useState<any[]>([]);
     const [isDirectsLoading, setIsDirectsLoading] = useState(false);
     const [sharing, setSharing] = useState(false);
@@ -58,7 +61,9 @@ export default function MyPlans() {
     const [searchTerm, setSearchTerm] = useState('');
 
     const purchases = purchaseData?.data?.purchases || [];
-    
+    const wallet = walletData?.data?.data?.[0];
+    const user = userData?.data;
+
     // Find the current active plan (latest APPROVED)
     const activePlan = purchases.find((p: any) => p.status === "APPROVED");
 
@@ -108,13 +113,20 @@ export default function MyPlans() {
         const dPurchases = d.planPurchases || [];
         const hasApproved = dPurchases.some((pp: any) => pp.purchase_type === 'FIRST_PURCHASE' && pp.status === 'APPROVED');
         if (hasApproved) return false;
-        
+
         const matchesSearch = (d.memberId && d.memberId.toLowerCase().includes(searchTerm.toLowerCase())) ||
             (`${d.firstName} ${d.lastName}`).toLowerCase().includes(searchTerm.toLowerCase());
         return matchesSearch;
     });
 
-    if (isPurchasesLoading || isWalletLoading) {
+    const getStatusLabel = () => {
+        if (!activePlan) return 'Guest';
+        if (user?.kycStatus === 'APPROVED') return 'Verified Member';
+        if (user?.kycStatus === 'PENDING') return 'KYC Pending';
+        return 'Active Member';
+    };
+
+    if (isPurchasesLoading || isWalletLoading || isUserLoading) {
         return (
             <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "60vh" }}>
                 <CircularProgress size={40} thickness={4} />
@@ -184,7 +196,7 @@ export default function MyPlans() {
                                     <Typography variant="h3" fontWeight={900} gutterBottom>
                                         {activePlan.plan?.planName}
                                     </Typography>
-                                    
+
                                     <Grid container spacing={3} sx={{ mt: 2 }}>
                                         <Grid size={{ xs: 6 }}>
                                             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>START DATE</Typography>
@@ -206,7 +218,7 @@ export default function MyPlans() {
                                         <TrendingUp size={14} /> EARNINGS FROM THIS PLAN
                                     </Typography>
                                     <Typography variant="h4" fontWeight={900} sx={{ my: 1, color: '#4ade80' }}>
-                                        ₹{Number(walletData?.data?.total_income || 0).toLocaleString()}
+                                        ₹{Number(wallet?.total_income || 0).toLocaleString()}
                                     </Typography>
                                     <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
                                         Net accumulated income
@@ -235,7 +247,7 @@ export default function MyPlans() {
                                     </Box>
                                     <Box>
                                         <Typography variant="caption" color="text.secondary" fontWeight={700}>CURRENT STATUS</Typography>
-                                        <Typography variant="body1" fontWeight={800}>{activePlan ? 'Verified Member' : 'Guest'}</Typography>
+                                        <Typography variant="body1" fontWeight={800}>{getStatusLabel()}</Typography>
                                     </Box>
                                 </Stack>
                                 <Divider />
@@ -245,7 +257,7 @@ export default function MyPlans() {
                                     </Box>
                                     <Box>
                                         <Typography variant="caption" color="text.secondary" fontWeight={700}>TOTAL MATCHED BV</Typography>
-                                        <Typography variant="body1" fontWeight={800}>{walletData?.data?.matched_bv || 0}</Typography>
+                                        <Typography variant="body1" fontWeight={800}>{wallet?.matched_bv || 0}</Typography>
                                     </Box>
                                 </Stack>
                                 <Divider />
@@ -255,7 +267,7 @@ export default function MyPlans() {
                                     </Box>
                                     <Box>
                                         <Typography variant="caption" color="text.secondary" fontWeight={700}>DP BALANCE</Typography>
-                                        <Typography variant="body1" fontWeight={800}>₹{Number(walletData?.data?.balance_dp_amount || 0).toLocaleString()}</Typography>
+                                        <Typography variant="body1" fontWeight={800}>₹{Number(wallet?.balance_dp_amount || 0).toLocaleString()}</Typography>
                                     </Box>
                                 </Stack>
                             </Stack>
@@ -401,3 +413,4 @@ export default function MyPlans() {
         </Box>
     );
 }
+

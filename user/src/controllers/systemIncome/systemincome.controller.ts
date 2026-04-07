@@ -16,7 +16,7 @@ export const getUserIncomeController = async (
     }
 
     const result = await prisma.$transaction((tx) =>
-      getUserIncome(userId, req.body, tx),
+      getUserIncome(userId, req.query as any, tx),
     );
 
     res.status(200).json({

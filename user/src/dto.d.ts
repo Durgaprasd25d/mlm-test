@@ -51,6 +51,7 @@ export interface getUserByIdResDTO {
   memberId: string;
   legPosition: string;
   status: "ACTIVE" | "INACTIVE";
+  kycStatus: "PENDING" | "APPROVED" | "REJECT";
   //useShare?: boolean;
   // firstname,lastname , mobile, email,memberid,legposition,status
 }

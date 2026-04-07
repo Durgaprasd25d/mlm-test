@@ -28,6 +28,7 @@ import RoyalityComission from "./pages/Setting-Config/RoyalityComission";
 import UserConfig from "./pages/Setting-Config/UserConfig";
 import UsersPage from "./pages/UsersPage";
 import OrdersManagement from "./pages/E-Commerce/OrdersManagement";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -85,8 +86,8 @@ function App() {
             </Route>
           </Route>
 
-          {/* Catch all - redirect to dashboard */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          {/* Catch all - 404 Page */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Toaster position="top-right" />
       </BrowserRouter>

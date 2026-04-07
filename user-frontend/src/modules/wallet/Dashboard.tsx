@@ -82,7 +82,7 @@ const MyWallets = () => {
 
     // Add wallet transactions (withdrawals, etc.)
     if (walletHistory) {
-      walletHistory.forEach((t: any) => {
+      walletHistory.filter((t: any) => t.type !== 'INCOME').forEach((t: any) => {
         combined.push({
           id: `txn-${t.id}`,
           date: new Date(t.createdAt),
@@ -90,7 +90,7 @@ const MyWallets = () => {
           amount: t.amount,
           status: t.status,
           reference: t.message || `Ref: #${t.reference_id || t.id}`,
-          isCredit: ['INCOME', 'ADJUSTMENT'].includes(t.type)
+          isCredit: ['ADJUSTMENT'].includes(t.type)
         });
       });
     }
@@ -100,8 +100,8 @@ const MyWallets = () => {
 
   const filteredHistory = useMemo(() => {
     if (tabIndex === 0) return history; // All
-    if (tabIndex === 1) return history.filter(h => h.isCredit); // Income
-    if (tabIndex === 2) return history.filter(h => !h.isCredit); // Expenses
+    if (tabIndex === 1) return history.filter(h => h.id.startsWith('income-')); // Show only detailed breakdown for Incomes
+    // if (tabIndex === 2) return history.filter(h => !h.isCredit); // Expenses
     return history;
   }, [history, tabIndex]);
 
@@ -181,7 +181,7 @@ const MyWallets = () => {
             Manage your earnings, bonuses, and transaction history
           </Typography>
         </Box>
-        <Button
+        {/* <Button
           variant="contained"
           startIcon={<ArrowUpRight size={18} />}
           sx={{
@@ -195,7 +195,7 @@ const MyWallets = () => {
           href="/wallet/withdraw"
         >
           Withdraw Funds
-        </Button>
+        </Button> */}
       </Stack>
 
       {/* 🚀 Main Entities Grid */}
@@ -239,7 +239,7 @@ const MyWallets = () => {
                   {entity.description}
                 </Typography>
 
-                <Divider sx={{ my: 2 }} />
+                {/* <Divider sx={{ my: 2 }} />
                 <Button
                   fullWidth
                   variant="text"
@@ -260,7 +260,7 @@ const MyWallets = () => {
                   }}
                 >
                   View History
-                </Button>
+                </Button> */}
               </CardContent>
             </Card>
           </Grid>
@@ -285,7 +285,7 @@ const MyWallets = () => {
         >
           <Tab label="All Activity" />
           <Tab label="Incomes" />
-          <Tab label="Purchases/Withdrawals" />
+          {/* <Tab label="Purchases/Withdrawals" /> */}
         </Tabs>
 
         <TableContainer sx={{ maxHeight: 600 }}>

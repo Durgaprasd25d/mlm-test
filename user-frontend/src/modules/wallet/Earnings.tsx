@@ -153,9 +153,9 @@ const Earnings = () => {
           >
             <AccountBalanceWalletIcon sx={{ fontSize: 32, color: designConfig.colors.primary.main }} />
           </Box>
-          <Typography variant="h6" fontWeight={800} gutterBottom color={designConfig.colors.text.primary}>
+          {/* <Typography variant="h6" fontWeight={800} gutterBottom color={designConfig.colors.text.primary}>
             Withdraw Funds
-          </Typography>
+          </Typography> */}
           <Typography variant="body2" color="text.secondary" mb={4} fontWeight={500}>
             The amount will be transferred to your registered bank account.
           </Typography>
